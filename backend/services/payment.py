@@ -26,16 +26,20 @@ class PaymentService:
                 "unit_price": float(item["unit_price"])
             })
 
+        # Get Client URL for redirect, default to localhost for dev
+        client_url = os.getenv("FRONTEND_URL", "http://127.0.0.1:3000")
+
         preference_data = {
             "items": mp_items,
             # "payer": {
             #     "email": payer_email
             # },
             "back_urls": {
-                "success": "http://127.0.0.1:3000/checkout/success",
-                "failure": "http://127.0.0.1:3000/checkout/failure",
-                "pending": "http://127.0.0.1:3000/checkout/pending"
+                "success": f"{client_url}/checkout/success",
+                "failure": f"{client_url}/checkout/failure",
+                "pending": f"{client_url}/checkout/pending"
             },
+            "auto_return": "approved",
             "external_reference": str(order_id),
             "statement_descriptor": "MUY CRIOLLO"
         }
