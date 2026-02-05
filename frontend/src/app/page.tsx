@@ -123,6 +123,7 @@ export default function Home() {
           <h3 className="text-xl font-heading text-primary mb-4">Muy Criollo</h3>
           <p className="text-gray-500 mb-2">Florida 537, Galería Jardín, Local 433, CABA</p>
           <p className="text-gray-600 text-sm">© 2026 Todos los derechos reservados.</p>
+          <p className="text-xs text-gray-800 mt-2">v.Deploy-{new Date().toISOString()}</p>
         </div>
       </footer>
     </div>

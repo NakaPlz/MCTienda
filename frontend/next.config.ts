@@ -24,12 +24,10 @@ const nextConfig: NextConfig = {
     console.log("DEBUG: BACKEND_INTERNAL_URL =", process.env.BACKEND_INTERNAL_URL);
     console.log("---------------------------------------------------");
 
-    let defaultUrl = 'http://127.0.0.1:8000';
-    if (process.env.NODE_ENV === 'production') {
-      defaultUrl = 'http://backend:8000';
-    }
+    // Forced logic for debugging
+    const backendUrl = process.env.BACKEND_INTERNAL_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:8000' : 'http://127.0.0.1:8000');
 
-    const backendUrl = process.env.BACKEND_INTERNAL_URL || defaultUrl;
+    console.log("DEBUG: Final Rewrite Destination:", backendUrl);
 
     return [
       {
