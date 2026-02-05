@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
+    console.log("---------------------------------------------------");
+    console.log("DEBUG: Loading Next Config Rewrites");
+    console.log("DEBUG: BACKEND_INTERNAL_URL =", process.env.BACKEND_INTERNAL_URL);
+    console.log("---------------------------------------------------");
     const backendUrl = process.env.BACKEND_INTERNAL_URL || 'http://127.0.0.1:8000';
     return [
       {
