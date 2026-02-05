@@ -126,6 +126,7 @@ class Order(BaseModel):
     status: str
     delivery_method: Optional[str] = None
     created_at: datetime
+    customer: Customer
     items: List[OrderItem]
     payment_url: Optional[str] = None
     shipping_data: Optional[str] = None # JSON string
