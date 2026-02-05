@@ -73,7 +73,7 @@ class EmailService:
             """
 
         # Replace placeholders
-        html_content = template.replace("{{customer_name}}", f"{order.customer.first_name}") \
+        html_content = template.replace("{{customer_name}}", f"{order.customer.full_name}") \
                                .replace("{{order_id}}", str(order.id)) \
                                .replace("{{date}}", order.created_at.strftime("%d/%m/%Y")) \
                                .replace("{{items_rows}}", items_rows) \
