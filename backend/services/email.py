@@ -11,6 +11,7 @@ class EmailService:
         self.sender_email = os.getenv("MAIL_USERNAME", "")
         self.sender_password = os.getenv("MAIL_PASSWORD", "")
         self.from_name = os.getenv("MAIL_FROM_NAME", "Muy Criollo")
+        self.admin_email = os.getenv("ADMIN_EMAIL", "muycriolloarg@gmail.com")
 
     def _load_template(self, template_name: str) -> str:
         try:
@@ -105,7 +106,7 @@ class EmailService:
         Revisar en el sistema.
         """
         # Admin gets simpler email for now, or reuse html if preferred. Keeping simple for speed.
-        self.send_email(self.sender_email, subject, body.replace("\n", "<br>")) # Simple quick html wrap
+        self.send_email(self.admin_email, subject, body.replace("\n", "<br>")) # Simple quick html wrap
 
     def send_status_update(self, order_id: int, new_status: str, customer_email: str, customer_name: str):
         """

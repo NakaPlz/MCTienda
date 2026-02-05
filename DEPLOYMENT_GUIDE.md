@@ -21,7 +21,14 @@ Crea una nueva "Application" (Servicio) dentro del proyecto.
 - **Environment** (Variables de Entorno):
     - `DATABASE_URL`: `sqlite:////app/data/tienda.db` (Nota: 4 barras para ruta absoluta).
     - `MERCADOPAGO_ACCESS_TOKEN`: `Tu_Token_De_Prod_O_Test`
-    - `MANAGEMENT_WEBHOOK_URL`: `https://omni-crm...` (La URL que te dieron).
+    - `MANAGEMENT_WEBHOOK_URL` (Opcional): URL de tu sistema Dragonfish.
+    - `FRONTEND_URL`: `https://TU-DOMINIO-FRONTEND` (Sin barra al final).
+    - **Emails (SMTP)**:
+        - `MAIL_SERVER`: `smtp.gmail.com`
+        - `MAIL_PORT`: `587`
+        - `MAIL_USERNAME`: `tu-email@gmail.com` (Usa una Contraseña de Aplicación)
+        - `MAIL_PASSWORD`: `tu-contraseña-aplicación`
+        - `ADMIN_EMAIL`: `muycriolloarg@gmail.com`
 - **Storage** (Volúmenes):
     - **Mount Path**: `/app/data` (Debe coincidir con la carpeta de la DB).
 - **Network**:
