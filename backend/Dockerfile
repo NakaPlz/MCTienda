@@ -15,5 +15,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar el código de la aplicación
 COPY . .
 
+# Crear directorio para datos (SQLite)
+RUN mkdir -p /app/data
+
 # Comando para ejecutar la aplicación
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
