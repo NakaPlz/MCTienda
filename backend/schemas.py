@@ -40,6 +40,12 @@ class Product(ProductBase):
 
     class Config:
         from_attributes = True
+
+class ProductListResponse(BaseModel):
+    items: List[Product]
+    total: int
+    page: int
+    limit: int
 class VariantUpdate(BaseModel):
     sku: str
     size: Optional[str] = None

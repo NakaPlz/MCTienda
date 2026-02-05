@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from dotenv import load_dotenv
 import os
 from pydantic import BaseModel
@@ -172,10 +172,30 @@ def webhook_update_product(payload: schemas.ProductUpdatePayload, db: Session = 
     db.commit()
     return {"message": "Product updated successfully", "id": payload.id, "variants_processed": len(payload.variants)}
 
-@app.get("/products", response_model=List[schemas.Product])
-def get_products(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
-    products = db.query(models.Product).filter(models.Product.is_active == True).offset(skip).limit(limit).all()
-    return products
+@app.get("/products", response_model=schemas.ProductListResponse)
+def get_products(
+    skip: int = 0, 
+    limit: int = 20, 
+    category: Optional[str] = None, 
+    search: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Product).filter(models.Product.is_active == True)
+    
+    # Filtering Logic (Pre-emptively adding for next step)
+    if category:
+        query = query.filter(models.Product.category == category)
+    if search:
+        # Simple case-insensitive search on name
+        query = query.filter(models.Product.name.ilike(f"%{search}%"))
+
+    total = query.count()
+    products = query.offset(skip).limit(limit).all()
+    
+    # Calculate current page (1-based)
+    current_page = (skip // limit) + 1
+    
+    return {"items": products, "total": total, "page": current_page, "limit": limit}
 
 @app.get("/products/{product_id}", response_model=schemas.Product)
 def get_product(product_id: str, db: Session = Depends(get_db)):
