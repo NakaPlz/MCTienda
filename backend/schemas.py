@@ -128,5 +128,7 @@ class Order(BaseModel):
     created_at: datetime
     items: List[OrderItem]
     payment_url: Optional[str] = None
+    shipping_data: Optional[str] = None # JSON string
+    billing_data: Optional[str] = None # JSON string
     class Config:
         from_attributes = True
