@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getOrder, confirmPayment } from '@/lib/api';
 import Link from 'next/link';
@@ -15,12 +15,18 @@ function SuccessContent() {
     const [loading, setLoading] = useState(true);
     const { clearCart } = useCart();
 
+    const processingRef = useRef(false);
+
     useEffect(() => {
         const processOrder = async () => {
             if (!external_reference) {
                 setLoading(false);
                 return;
             }
+
+            // Prevent double execution in StrictMode (Dev)
+            if (processingRef.current) return;
+            processingRef.current = true;
 
             try {
                 const orderId = parseInt(external_reference);
@@ -40,6 +46,7 @@ function SuccessContent() {
                 }
             } catch (err) {
                 console.error("Error processing order:", err);
+                // Allow retrying if error occurred? Ideally yes, but for now simple lock
             } finally {
                 setLoading(false);
             }
