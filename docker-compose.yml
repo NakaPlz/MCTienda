@@ -1,0 +1,36 @@
+services:
+  backend:
+    build: ./backend
+    container_name: tienda_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/tiendadb
+    depends_on:
+      - db
+    networks:
+      - tiendaneta
+
+  db:
+    image: postgres:15-alpine
+    container_name: tienda_db
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=tiendadb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tiendaneta
+
+networks:
+  tiendaneta:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors - Defined directly as HSL */
+  --color-background: hsl(220 15% 10%);
+  --color-foreground: hsl(40 20% 90%);
+
+  --color-primary: hsl(35 80% 50%);
+  --color-primary-foreground: hsl(220 15% 10%);
+
+  --color-secondary: hsl(40 10% 20%);
+  --color-secondary-foreground: hsl(40 20% 90%);
+
+  --color-accent: hsl(45 40% 60%);
+  --color-accent-foreground: hsl(220 15% 10%);
+
+  --color-card: hsl(220 15% 13%);
+  --color-card-foreground: hsl(40 20% 90%);
+
+  --color-border: hsl(220 15% 20%);
+  --color-input: hsl(220 15% 20%);
+  --color-ring: hsl(35 80% 50%);
+
+  /* Fonts - Mapped to Next.js CSS Variables */
+  --font-body: var(--font-lato), sans-serif;
+  --font-heading: var(--font-playfair), serif;
+
+  /* Radius */
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+}

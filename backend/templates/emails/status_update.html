@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background-color: #1a1a1a;
+            color: #d4af37;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #d4af37;
+            color: #000;
+            font-weight: bold;
+            border-radius: 50px;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            background-color: #eee;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #1a1a1a;
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Muy Criollo</h1>
+            <p style="color: #888; margin: 5px 0 0; font-size: 12px;">ACTUALIZACIÓN DE ESTADO</p>
+        </div>
+        <div class="content">
+            <h2>Hola {{customer_name}},</h2>
+            <p>Hay novedades sobre tu pedido <strong>#{{order_id}}</strong>.</p>
+
+            <p>El nuevo estado es:</p>
+            <div class="status-badge">{{status_text}}</div>
+
+            <p>{{message}}</p>
+
+            <a href="https://muycriollo.com.ar/orders/track" class="btn">Ver estado del pedido</a>
+        </div>
+        <div class="footer">
+            <p>Florida 537, Galería Jardín, Local 433, CABA</p>
+            <p>&copy; 2026 Muy Criollo. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</body>
+
+</html>
