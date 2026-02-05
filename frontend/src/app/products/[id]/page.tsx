@@ -33,6 +33,19 @@ export default function ProductDetailPage() {
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+    const [selectedColor, setSelectedColor] = useState<string | null>(null);
+    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+
+    // Resolve variant when selections change
+    useEffect(() => {
+        if (!product || !product.variants) return;
+
+        const found = product.variants.find(v =>
+            (v.color === selectedColor || (!v.color && !selectedColor)) &&
+            (v.size === selectedSize || (!v.size && !selectedSize))
+        );
+        setSelectedVariant(found || null);
+    }, [selectedColor, selectedSize, product]);
 
     useEffect(() => {
         if (!id) return;
@@ -105,36 +118,88 @@ export default function ProductDetailPage() {
                         <p>{product.description || "Sin descripción disponible."}</p>
                     </div>
 
-                    {/* Variants Selector */}
+                    {/* Variants Selector - Dynamic Logic */}
                     {product.variants && product.variants.length > 0 && (
-                        <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700">
-                            <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                                <span className="bg-primary w-2 h-2 rounded-full"></span>
-                                Opciones Disponibles
-                            </h3>
-                            <div className="flex flex-wrap gap-3">
-                                {product.variants.map((v) => (
-                                    <button
-                                        key={v.id}
-                                        onClick={() => setSelectedVariant(v)}
-                                        className={`px-4 py-2 rounded-lg border transition-all text-sm font-bold flex flex-col items-center min-w-[80px]
-                                            ${selectedVariant?.id === v.id
-                                                ? 'bg-primary text-black border-primary scale-105 shadow-lg shadow-primary/20'
-                                                : 'bg-transparent text-gray-300 border-gray-600 hover:border-gray-400 hover:bg-white/5'
-                                            }
-                                        `}
-                                    >
-                                        <span>{v.size || 'Único'}</span>
-                                        {v.color && <span className="text-[10px] opacity-80">{v.color}</span>}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="mt-4 text-xs text-gray-500">
-                                SKU: <span className="font-mono text-gray-400">{selectedVariant?.sku}</span>
-                                {selectedVariant && selectedVariant.stock < 5 && (
-                                    <span className="ml-4 text-orange-500 font-bold">¡Últimas {selectedVariant.stock} unidades!</span>
-                                )}
-                            </div>
+                        <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700 space-y-6">
+
+                            {/* Color Selector */}
+                            {Array.from(new Set(product.variants.map(v => v.color).filter(Boolean))).length > 0 && (
+                                <div>
+                                    <h3 className="text-white font-bold mb-3">Color</h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        {Array.from(new Set(product.variants.map(v => v.color).filter(Boolean))).map((color) => {
+                                            const isAvailable = product.variants.some(v =>
+                                                v.color === color &&
+                                                (selectedSize ? v.size === selectedSize : true) &&
+                                                v.stock > 0
+                                            );
+                                            const isSelected = selectedColor === color;
+
+                                            return (
+                                                <button
+                                                    key={color as string}
+                                                    onClick={() => !(!isAvailable && selectedSize) && setSelectedColor(color as string)}
+                                                    disabled={!isAvailable && !!selectedSize} // Only disable if filtered by other dimension
+                                                    className={`px-4 py-2 rounded-lg border transition-all text-sm font-bold
+                                                        ${isSelected
+                                                            ? 'bg-transparent border-yellow-500 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                                                            : 'bg-transparent border-gray-600 text-gray-300 hover:border-gray-400'
+                                                        }
+                                                        ${(!isAvailable && !!selectedSize) ? 'opacity-30 cursor-not-allowed decoration-slice line-through' : ''}
+                                                    `}
+                                                >
+                                                    {color}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Size Selector */}
+                            {Array.from(new Set(product.variants.map(v => v.size).filter(Boolean))).length > 0 && (
+                                <div>
+                                    <h3 className="text-white font-bold mb-3">Talle</h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        {Array.from(new Set(product.variants.map(v => v.size).filter(Boolean))).map((size) => {
+                                            const isAvailable = product.variants.some(v =>
+                                                v.size === size &&
+                                                (selectedColor ? v.color === selectedColor : true) &&
+                                                v.stock > 0
+                                            );
+                                            const isSelected = selectedSize === size;
+
+                                            return (
+                                                <button
+                                                    key={size as string}
+                                                    onClick={() => !(!isAvailable && selectedColor) && setSelectedSize(size as string)}
+                                                    disabled={!isAvailable && !!selectedColor}
+                                                    className={`w-12 h-12 rounded-lg border transition-all text-sm font-bold flex items-center justify-center
+                                                        ${isSelected
+                                                            ? 'bg-transparent border-yellow-500 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                                                            : 'bg-transparent border-gray-600 text-gray-300 hover:border-gray-400'
+                                                        }
+                                                        ${(!isAvailable && !!selectedColor) ? 'opacity-30 cursor-not-allowed line-through' : ''}
+                                                    `}
+                                                >
+                                                    {size}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Stock Display */}
+                            {selectedVariant ? (
+                                <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 font-mono text-sm">
+                                    Stock disponible: <span className="font-bold text-lg">{selectedVariant.stock}</span> unidades
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-500 italic">
+                                    Selecciona variaciones para ver stock
+                                </div>
+                            )}
                         </div>
                     )}
 
