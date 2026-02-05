@@ -1,4 +1,8 @@
-const API_URL = "/api/backend";
+const IS_SERVER = typeof window === 'undefined';
+// On server: Use internal Docker URL. On client: Use proxy path.
+const API_URL = IS_SERVER
+  ? (process.env.BACKEND_INTERNAL_URL || "http://127.0.0.1:8000")
+  : "/api/backend";
 
 export async function createOrder(orderData: any) {
   try {
