@@ -420,3 +420,26 @@ def confirm_order(order_id: int, payment_id: str, db: Session = Depends(get_db))
         print(f"Payment verification failed for Order #{order_id}. Status: {status}")
         return {"message": "Payment not approved yet", "status": status}
 
+
+@app.delete("/admin/products/mocks", status_code=status.HTTP_200_OK)
+def delete_mock_products(db: Session = Depends(get_db)):
+    """
+    Endpoint temporal para eliminar productos mock remanentes en producción.
+    Elimina: MC-SOM-PAMPA, MC-BOI-VENTO, MC-CUCH-ART, TEST-PRICE-10K
+    """
+    ids_to_remove = [
+        "MC-SOM-PAMPA", 
+        "MC-BOI-VENTO", 
+        "MC-CUCH-ART", 
+        "TEST-PRICE-10K"
+    ]
+    
+    # 1. Delete Variants
+    db.query(models.ProductVariant).filter(models.ProductVariant.product_id.in_(ids_to_remove)).delete(synchronize_session=False)
+    
+    # 2. Delete Products
+    deleted_count = db.query(models.Product).filter(models.Product.id.in_(ids_to_remove)).delete(synchronize_session=False)
+    
+    db.commit()
+    
+    return {"message": "Mock products deleted", "count": deleted_count, "ids": ids_to_remove}
