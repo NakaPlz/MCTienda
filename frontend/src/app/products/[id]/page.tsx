@@ -124,7 +124,11 @@ export default function ProductDetailPage() {
                     </div>
 
                     <div className="prose prose-invert text-gray-400 leading-relaxed">
-                        <p>{product.description || "Sin descripción disponible."}</p>
+                        <p>
+                            {product.description && !product.description.includes("Importado de Mercado Libre")
+                                ? product.description
+                                : ""}
+                        </p>
                     </div>
 
                     {/* Variants Selector - Dynamic Logic */}

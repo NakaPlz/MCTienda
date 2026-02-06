@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'http2.mlstatic.com',
       },
+      {
+        protocol: 'http',
+        hostname: 'http2.mlstatic.com',
+      },
     ],
   },
   async rewrites() {
