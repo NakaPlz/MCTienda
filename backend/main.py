@@ -21,7 +21,10 @@ app = FastAPI(title="Tienda Muy Criollo API", version="0.1.0")
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "*"
+    "https://muycriollo.com.ar",
+    "https://www.muycriollo.com.ar",
+    os.getenv("FRONTEND_URL", ""), 
+    "*" # Mantener fallback por si acaso, o quitar para mayor seguridad
 ]
 
 app.add_middleware(
