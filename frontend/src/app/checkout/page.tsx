@@ -101,7 +101,8 @@ export default function CheckoutPage() {
                 },
                 billing: {
                     invoice_type: invoiceType,
-                    email: billingData.email || buyer.email, // Fallback to buyer email if empty
+                    name: billingData.name, // Added missing field
+                    email: billingData.email || buyer.email,
                     dni: invoiceType === 'B' ? billingData.dni : undefined,
                     cuit: invoiceType === 'A' ? billingData.cuit : undefined,
                     fiscal_address: invoiceType === 'A' ? billingData.fiscal_address : undefined
