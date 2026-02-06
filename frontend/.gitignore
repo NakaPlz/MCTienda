@@ -47,3 +47,16 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+#CatalogoMuyCriollo
+CatalogoMuyCriollo
+
+#agent
+.agent
+
+#diseño
+diseño
+
+#DEPLOYMENT_GUIDE.md
+DEPLOYMENT_GUIDE.md
+
