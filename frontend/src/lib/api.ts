@@ -21,14 +21,23 @@ export async function createOrder(orderData: any) {
   }
 }
 
-export async function fetchProducts() {
+export async function fetchProducts(page = 1, limit = 9, category = '', search = '') {
   try {
-    const res = await fetch(`${API_URL}/products`, { cache: 'no-store' });
+    const skip = (page - 1) * limit;
+    const queryParams = new URLSearchParams({
+      skip: skip.toString(),
+      limit: limit.toString()
+    });
+
+    if (category) queryParams.append('category', category);
+    if (search) queryParams.append('search', search);
+
+    const res = await fetch(`${API_URL}/products?${queryParams.toString()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error("Failed to fetch products");
     return await res.json();
   } catch (error) {
     console.error(error);
-    return []; // Return empty array on error for now
+    return { items: [], total: 0, page: 1, limit: limit }; // Return safe empty/mock object structure
   }
 }
 
