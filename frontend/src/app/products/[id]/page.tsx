@@ -56,7 +56,12 @@ export default function ProductDetailPage() {
                 if (data && data.variants && data.variants.length > 0) {
                     // Default to first variant with stock, or just first
                     const available = data.variants.find((v: Variant) => v.stock > 0);
-                    setSelectedVariant(available || data.variants[0]);
+                    const target = available || data.variants[0];
+
+                    // Sync all states so the UI reflects the default selection
+                    setSelectedColor(target.color);
+                    setSelectedSize(target.size);
+                    setSelectedVariant(target);
                 }
             })
             .catch(err => console.error(err))
@@ -67,11 +72,16 @@ export default function ProductDetailPage() {
     if (!product) return <div className="text-center text-white p-20">Producto no encontrado</div>;
 
     const handleAddToCart = () => {
+        if (product.variants && product.variants.length > 0 && !selectedVariant) {
+            alert("Por favor selecciona las opciones (Color/Talle) antes de agregar.");
+            return;
+        }
+
         const variantToAdd = selectedVariant;
 
         addItem({
             product_id: product.id,
-            variant_id: variantToAdd?.id, // Optional if no variants
+            variant_id: variantToAdd?.id,
             sku: variantToAdd ? variantToAdd.sku : product.id,
             name: product.name,
             price: product.price,
@@ -81,7 +91,6 @@ export default function ProductDetailPage() {
             color: variantToAdd?.color || undefined
         });
 
-        // Simple visual feedback could go here
         alert("Producto agregado al carrito!");
     };
 
@@ -128,25 +137,42 @@ export default function ProductDetailPage() {
                                     <h3 className="text-white font-bold mb-3">Color</h3>
                                     <div className="flex flex-wrap gap-3">
                                         {Array.from(new Set(product.variants.map(v => v.color).filter(Boolean))).map((color) => {
-                                            const isAvailable = product.variants.some(v =>
-                                                v.color === color &&
-                                                (selectedSize ? v.size === selectedSize : true) &&
-                                                v.stock > 0
+                                            // 1. Is this color available at all for this product?
+                                            const hasAnyStock = product.variants.some(v => v.color === color && v.stock > 0);
+
+                                            // 2. Is it available with the CURRENT size?
+                                            const isCompatible = !selectedSize || product.variants.some(v =>
+                                                v.color === color && v.size === selectedSize && v.stock > 0
                                             );
+
                                             const isSelected = selectedColor === color;
 
                                             return (
                                                 <button
                                                     key={color as string}
-                                                    onClick={() => !(!isAvailable && selectedSize) && setSelectedColor(color as string)}
-                                                    disabled={!isAvailable && !!selectedSize} // Only disable if filtered by other dimension
+                                                    onClick={() => {
+                                                        if (!hasAnyStock) return;
+
+                                                        if (isSelected) {
+                                                            // Toggle OFF
+                                                            setSelectedColor(null);
+                                                        } else {
+                                                            // Toggle ON
+                                                            setSelectedColor(color as string);
+                                                            // If not compatible with current size, reset size
+                                                            if (!isCompatible) setSelectedSize(null);
+                                                        }
+                                                    }}
+                                                    disabled={!hasAnyStock}
                                                     className={`px-4 py-2 rounded-lg border transition-all text-sm font-bold
                                                         ${isSelected
                                                             ? 'bg-transparent border-yellow-500 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
                                                             : 'bg-transparent border-gray-600 text-gray-300 hover:border-gray-400'
                                                         }
-                                                        ${(!isAvailable && !!selectedSize) ? 'opacity-30 cursor-not-allowed decoration-slice line-through' : ''}
+                                                        ${!hasAnyStock ? 'opacity-30 cursor-not-allowed decoration-slice line-through' : ''}
+                                                        ${(!isSelected && !isCompatible && hasAnyStock) ? 'opacity-60 border-dashed' : ''} 
                                                     `}
+                                                    title={!isCompatible && hasAnyStock ? "Esta opción cambiará el talle seleccionado" : ""}
                                                 >
                                                     {color}
                                                 </button>
@@ -162,25 +188,39 @@ export default function ProductDetailPage() {
                                     <h3 className="text-white font-bold mb-3">Talle</h3>
                                     <div className="flex flex-wrap gap-3">
                                         {Array.from(new Set(product.variants.map(v => v.size).filter(Boolean))).map((size) => {
-                                            const isAvailable = product.variants.some(v =>
-                                                v.size === size &&
-                                                (selectedColor ? v.color === selectedColor : true) &&
-                                                v.stock > 0
+                                            // 1. Is this size available at all?
+                                            const hasAnyStock = product.variants.some(v => v.size === size && v.stock > 0);
+
+                                            // 2. Is it available with CURRENT color?
+                                            const isCompatible = !selectedColor || product.variants.some(v =>
+                                                v.size === size && v.color === selectedColor && v.stock > 0
                                             );
+
                                             const isSelected = selectedSize === size;
 
                                             return (
                                                 <button
                                                     key={size as string}
-                                                    onClick={() => !(!isAvailable && selectedColor) && setSelectedSize(size as string)}
-                                                    disabled={!isAvailable && !!selectedColor}
+                                                    onClick={() => {
+                                                        if (!hasAnyStock) return;
+
+                                                        if (isSelected) {
+                                                            setSelectedSize(null);
+                                                        } else {
+                                                            setSelectedSize(size as string);
+                                                            if (!isCompatible) setSelectedColor(null);
+                                                        }
+                                                    }}
+                                                    disabled={!hasAnyStock}
                                                     className={`w-12 h-12 rounded-lg border transition-all text-sm font-bold flex items-center justify-center
                                                         ${isSelected
                                                             ? 'bg-transparent border-yellow-500 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
                                                             : 'bg-transparent border-gray-600 text-gray-300 hover:border-gray-400'
                                                         }
-                                                        ${(!isAvailable && !!selectedColor) ? 'opacity-30 cursor-not-allowed line-through' : ''}
+                                                        ${!hasAnyStock ? 'opacity-30 cursor-not-allowed line-through' : ''}
+                                                        ${(!isSelected && !isCompatible && hasAnyStock) ? 'opacity-60 border-dashed' : ''}
                                                     `}
+                                                    title={!isCompatible && hasAnyStock ? "Esta opción cambiará el color seleccionado" : ""}
                                                 >
                                                     {size}
                                                 </button>
