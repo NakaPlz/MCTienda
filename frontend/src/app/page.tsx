@@ -144,23 +144,31 @@ export default function Home() {
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="mt-12 flex justify-center gap-4">
+                <div className="mt-12 flex justify-center gap-6 items-center">
                   <button
                     disabled={page === 1}
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="p-3 bg-gray-800 text-white rounded-full hover:bg-primary hover:text-black hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-gray-800 disabled:hover:text-white disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
+                    aria-label="Página anterior"
                   >
-                    ← Anterior
+                    <svg title="Anterior" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
                   </button>
-                  <span className="flex items-center text-gray-400 font-mono">
-                    Página {page} de {totalPages}
+
+                  <span className="flex items-center text-gray-400 font-mono text-sm tracking-widest uppercase">
+                    Página <span className="text-white font-bold mx-2 text-lg">{page}</span> de <span className="mx-2">{totalPages}</span>
                   </span>
+
                   <button
                     disabled={page === totalPages}
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="p-3 bg-gray-800 text-white rounded-full hover:bg-primary hover:text-black hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-gray-800 disabled:hover:text-white disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
+                    aria-label="Página siguiente"
                   >
-                    Siguiente →
+                    <svg title="Siguiente" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
                   </button>
                 </div>
               )}
