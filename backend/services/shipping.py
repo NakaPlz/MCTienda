@@ -24,7 +24,7 @@ class ShippingService:
         if total_amount >= 35000:
             return 0.0
         else:
-            return 100.0
+            return 1.0 # TEST VALUE: 1 peso
 
     def create_label_placeholder(self, order_data: Dict[str, Any]):
         """
