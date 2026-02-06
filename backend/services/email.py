@@ -83,10 +83,17 @@ class EmailService:
         self.send_email(order.customer.email, f"🎉 Confirmación de Compra #{order.id}", html_content)
 
 
-    def send_order_notification_admin(self, order_id: int, total: float, customer_name: str, items: List[any]):
+import json
+
+    def send_order_notification_admin(self, order: Any):
         """
         Envía notificación simple de venta al ADMINISTRADOR (Texto plano/Simple).
         """
+        order_id = order.id
+        total = order.total_amount
+        customer_name = order.customer.full_name
+        items = order.items
+        
         subject = f"💰 Nueva Venta #{order_id} - ${total:,.0f}"
         
         # Helper to get item name
@@ -97,12 +104,53 @@ class EmailService:
                 return item.name
             return item.product_id
 
-        items_str = "\n".join([f"- {item.quantity}x {get_item_name(item)} - ({item.product_id}) - (${item.unit_price})" for item in items])
+        items_str = "\n".join([f"- {item.quantity}x {get_item_name(item)} - (${item.unit_price:,.0f})" for item in items])
+        
+        # Parse Shipping Data
+        shipping_info = f"Método: {order.delivery_method}"
+        try:
+            if order.shipping_data:
+                s_data = json.loads(order.shipping_data)
+                if order.delivery_method == "pickup":
+                    shipping_info += f"\nRetira: {s_data.get('pickup_name', '-')} (DNI: {s_data.get('pickup_dni', '-')})"
+                else:
+                    shipping_info += f"\nDirección: {s_data.get('address')} {s_data.get('floor_apt', '')}"
+                    shipping_info += f"\nCiudad: {s_data.get('city')}, {s_data.get('province')} ({s_data.get('zip_code')})"
+        except Exception as e:
+            shipping_info += f" (Error parsing data: {e})"
+
+        # Parse Billing Data
+        billing_info = "Consumidor Final"
+        try:
+            if order.billing_data:
+                b_data = json.loads(order.billing_data)
+                invoice_type = b_data.get('invoice_type', 'B')
+                billing_info = f"Factura {invoice_type}"
+                billing_info += f"\nNombre: {b_data.get('name')}"
+                billing_info += f"\nID Tributario: {b_data.get('cuit') or b_data.get('dni')}"
+                if invoice_type == 'A':
+                    billing_info += f"\nDirección Fiscal: {b_data.get('fiscal_address')}"
+        except:
+            pass
+
         body = f"""
         ¡Nueva venta registrada!
-        Orden: #{order_id} - Cliente: {customer_name} - Total: ${total:,.2f}
-        Items:
+        --------------------------------------------------
+        Orden: #{order_id}
+        Cliente: {customer_name}
+        Email: {order.customer.email}
+        Teléfono: {order.customer.phone}
+        Total: ${total:,.2f}
+        
+        ITEMS:
         {items_str}
+        
+        ENVÍO:
+        {shipping_info}
+        
+        FACTURACIÓN:
+        {billing_info}
+        --------------------------------------------------
         Revisar en el sistema.
         """
         # Admin gets simpler email for now, or reuse html if preferred. Keeping simple for speed.

@@ -402,12 +402,7 @@ def confirm_order(order_id: int, payment_id: str, db: Session = Depends(get_db))
                 email_service.send_order_confirmation_client(order)
 
                 # 2. Email to Admin (Simple Alert)
-                email_service.send_order_notification_admin(
-                    order_id=order.id,
-                    total=order.total_amount,
-                    customer_name=f"{order.customer.full_name}",
-                    items=order.items
-                )
+                email_service.send_order_notification_admin(order)
             except Exception as e:
                 print(f"Error sending confirmation email: {e}")
             
