@@ -421,6 +421,7 @@ def confirm_order(order_id: int, payment_id: str, db: Session = Depends(get_db))
         return {"message": "Payment not approved yet", "status": status}
 
 
+
 @app.delete("/admin/products/mocks", status_code=status.HTTP_200_OK)
 def delete_mock_products(db: Session = Depends(get_db)):
     """
@@ -443,3 +444,18 @@ def delete_mock_products(db: Session = Depends(get_db)):
     db.commit()
     
     return {"message": "Mock products deleted", "count": deleted_count, "ids": ids_to_remove}
+
+@app.delete("/admin/products/all", status_code=status.HTTP_200_OK)
+def delete_all_products(db: Session = Depends(get_db)):
+    """
+    🔥 PELIGRO: Elimina TODOS los productos y variantes.
+    """
+    try:
+        num_variants = db.query(models.ProductVariant).delete()
+        num_products = db.query(models.Product).delete()
+        db.commit()
+        return {"message": "All products deleted", "products_deleted": num_products, "variants_deleted": num_variants}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error deleting data: {str(e)}")
+
