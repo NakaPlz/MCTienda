@@ -2,6 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+import json
 from typing import List, Dict, Any
 
 class EmailService:
@@ -82,8 +83,6 @@ class EmailService:
         # Send to Client
         self.send_email(order.customer.email, f"🎉 Confirmación de Compra #{order.id}", html_content)
 
-
-import json
 
     def send_order_notification_admin(self, order: Any):
         """
