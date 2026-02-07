@@ -127,7 +127,7 @@ class EmailService:
                 billing_info = f"Factura {invoice_type}"
                 billing_info += f"\nNombre: {b_data.get('name')}"
                 billing_info += f"\nID Tributario: {b_data.get('cuit') or b_data.get('dni')}"
-                if invoice_type == 'A':
+                if b_data.get('fiscal_address'):
                     billing_info += f"\nDirección Fiscal: {b_data.get('fiscal_address')}"
         except:
             pass
