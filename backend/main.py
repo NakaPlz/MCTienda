@@ -477,6 +477,24 @@ def delete_mock_products(db: Session = Depends(get_db)):
     
     return {"message": "Mock products deleted", "count": deleted_count, "ids": ids_to_remove}
 
+@app.delete("/admin/products/{product_id}", status_code=status.HTTP_200_OK)
+def delete_product(product_id: str, db: Session = Depends(get_db)):
+    """
+    Elimina un producto específico y sus variantes.
+    """
+    # 1. Delete Variants
+    db.query(models.ProductVariant).filter(models.ProductVariant.product_id == product_id).delete(synchronize_session=False)
+    
+    # 2. Delete Product
+    deleted_count = db.query(models.Product).filter(models.Product.id == product_id).delete(synchronize_session=False)
+    
+    db.commit()
+    
+    if deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    return {"message": "Product deleted", "id": product_id}
+
 @app.delete("/admin/products/all", status_code=status.HTTP_200_OK)
 def delete_all_products(db: Session = Depends(get_db)):
     """

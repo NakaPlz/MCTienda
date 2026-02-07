@@ -21,10 +21,10 @@ class ShippingService:
             return 0.0
 
         # Regla simple solicitada por el usuario
-        if total_amount >= 35000:
+        if total_amount >= 55000:
             return 0.0
         else:
-            return 1.0 # TEST VALUE: 1 peso
+            return 10000.0
 
     def create_label_placeholder(self, order_data: Dict[str, Any]):
         """
