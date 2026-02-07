@@ -38,7 +38,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
             {/* Content */}
             <div className="p-5 flex flex-col flex-grow">
                 <div className="mb-4">
-                    <p className="text-xs text-primary font-bold tracking-wider mb-1 uppercase opacity-80">{product.sku}</p>
                     <h3 className="text-xl font-heading text-white leading-tight font-medium line-clamp-2" title={product.name}>
                         {product.name}
                     </h3>
@@ -53,14 +52,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
                     </div>
 
                     <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onAddToCart(product);
-                        }}
                         className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition-colors shadow-md active:scale-95 z-10 relative"
                     >
-                        Agregar
+                        Ver opciones
                     </button>
                 </div>
             </div>
