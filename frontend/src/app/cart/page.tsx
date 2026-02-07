@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 export default function CartPage() {
     const { items, total, updateQuantity, removeItem } = useCart();
-    const FREE_SHIPPING_THRESHOLD = 35000;
+    const FREE_SHIPPING_THRESHOLD = 55000;
     const missingForFreeShipping = FREE_SHIPPING_THRESHOLD - total;
     const progressPercentage = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
 
