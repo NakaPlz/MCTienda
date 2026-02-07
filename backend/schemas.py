@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
+import json
 
 class ProductBase(BaseModel):
     external_id: Optional[str] = None
@@ -33,10 +34,25 @@ class ProductVariant(ProductVariantBase):
     class Config:
         from_attributes = True
 
+from pydantic import BaseModel, field_validator
+import json
+
+# ... (ProductBase remains the same, or we add images there? Let's add it to Product primarily)
+
 class Product(ProductBase):
     id: str
     updated_at: Optional[datetime] = None
     variants: List[ProductVariant] = []
+    images: Optional[List[str]] = []
+
+    @field_validator('images', mode='before')
+    def parse_images(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except:
+                return []
+        return v if v else []
 
     class Config:
         from_attributes = True
@@ -59,6 +75,7 @@ class ProductUpdatePayload(BaseModel):
     description: Optional[str] = None
     price: float
     image_url: Optional[str] = None
+    images: Optional[List[str]] = []
     category: Optional[str] = None
     variants: List[VariantUpdate] = []
 

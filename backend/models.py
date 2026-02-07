@@ -15,6 +15,7 @@ class Product(Base):
     price = Column(Float)
     stock = Column(Integer, default=0)
     image_url = Column(String, nullable=True)
+    images = Column(Text, nullable=True) # JSON list of strings
     category = Column(String, index=True, nullable=True)
     is_active = Column(Boolean, default=True)
     variants = relationship("ProductVariant", back_populates="product")

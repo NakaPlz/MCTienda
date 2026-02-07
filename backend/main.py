@@ -121,6 +121,8 @@ def webhook_update_product(payload: schemas.ProductUpdatePayload, db: Session = 
             db_product.description = payload.description
         if payload.image_url:
             db_product.image_url = payload.image_url
+        if payload.images:
+            db_product.images = json.dumps(payload.images)
         if payload.category:
             db_product.category = payload.category
         
@@ -138,6 +140,7 @@ def webhook_update_product(payload: schemas.ProductUpdatePayload, db: Session = 
             price=payload.price,
             stock=0, # Will be calculated or set by variants
             image_url=payload.image_url,
+            images=json.dumps(payload.images) if payload.images else "[]",
             category=payload.category,
             is_active=True
         )
