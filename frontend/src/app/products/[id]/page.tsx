@@ -21,6 +21,7 @@ interface Product {
     description: string;
     price: number;
     image_url: string;
+    images?: string[];
     category: string;
     variants: Variant[];
 }
@@ -35,6 +36,7 @@ export default function ProductDetailPage() {
     const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [mainImage, setMainImage] = useState<string | null>(null);
 
     // Resolve variant when selections change
     useEffect(() => {
@@ -53,15 +55,18 @@ export default function ProductDetailPage() {
         getProduct(id)
             .then(data => {
                 setProduct(data);
-                if (data && data.variants && data.variants.length > 0) {
-                    // Default to first variant with stock, or just first
-                    const available = data.variants.find((v: Variant) => v.stock > 0);
-                    const target = available || data.variants[0];
+                if (data) {
+                    setMainImage(data.image_url);
+                    if (data.variants && data.variants.length > 0) {
+                        // Default to first variant with stock, or just first
+                        const available = data.variants.find((v: Variant) => v.stock > 0);
+                        const target = available || data.variants[0];
 
-                    // Sync all states so the UI reflects the default selection
-                    setSelectedColor(target.color);
-                    setSelectedSize(target.size);
-                    setSelectedVariant(target);
+                        // Sync all states so the UI reflects the default selection
+                        setSelectedColor(target.color);
+                        setSelectedSize(target.size);
+                        setSelectedVariant(target);
+                    }
                 }
             })
             .catch(err => console.error(err))
@@ -94,6 +99,11 @@ export default function ProductDetailPage() {
         alert("Producto agregado al carrito!");
     };
 
+    // Use mainImage or fallback to product.image_url
+    const currentImage = mainImage || product.image_url;
+    // Combine main image + extra images for gallery, filtering duplicates
+    const galleryImages = [product.image_url, ...(product.images || [])].filter((v, i, a) => v && a.indexOf(v) === i);
+
     return (
         <div className="min-h-screen p-4 md:p-12 animate-fadeIn max-w-7xl mx-auto">
             <Link href="/" className="text-gray-400 hover:text-white mb-8 inline-block transition-colors">
@@ -101,17 +111,34 @@ export default function ProductDetailPage() {
             </Link>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-card p-8 rounded-2xl border border-gray-800 shadow-2xl">
-                {/* Image Section */}
-                <div className="relative aspect-square w-full bg-gray-700 rounded-xl overflow-hidden group">
-                    {product.image_url ? (
-                        <Image
-                            src={product.image_url}
-                            alt={product.name}
-                            fill
-                            className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
-                    ) : (
-                        <div className="flex bg-gray-800 h-full items-center justify-center text-gray-500">Sin Imagen</div>
+                {/* Image Section (Gallery) */}
+                <div className="flex flex-col gap-4">
+                    <div className="relative aspect-square w-full bg-gray-700 rounded-xl overflow-hidden group border border-gray-700">
+                        {currentImage ? (
+                            <Image
+                                src={currentImage}
+                                alt={product.name}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                            />
+                        ) : (
+                            <div className="flex bg-gray-800 h-full items-center justify-center text-gray-500">Sin Imagen</div>
+                        )}
+                    </div>
+                    {/* Thumbnails */}
+                    {galleryImages.length > 1 && (
+                        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                            {galleryImages.map((img, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setMainImage(img)}
+                                    className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all
+                                        ${mainImage === img ? 'border-primary opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                >
+                                    <Image src={img!} alt={`Ver imagen ${idx + 1}`} fill className="object-cover" />
+                                </button>
+                            ))}
+                        </div>
                     )}
                 </div>
 
