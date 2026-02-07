@@ -20,6 +20,7 @@ interface Product {
     name: string;
     description: string;
     price: number;
+    stock: number;
     image_url: string;
     images?: string[];
     category: string;
@@ -91,6 +92,7 @@ export default function ProductDetailPage() {
             name: product.name,
             price: product.price,
             quantity: 1,
+            stock: variantToAdd ? variantToAdd.stock : (product.stock || 0),
             image_url: product.image_url,
             size: variantToAdd?.size || undefined,
             color: variantToAdd?.color || undefined
