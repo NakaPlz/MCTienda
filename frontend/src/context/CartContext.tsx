@@ -9,6 +9,7 @@ export interface CartItem {
     name: string;
     price: number;
     quantity: number;
+    stock: number; // Added stock field
     image_url?: string;
     size?: string | null;
     color?: string | null;
@@ -58,12 +59,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             );
 
             if (existingItem) {
+                const totalQuantity = existingItem.quantity + newItem.quantity;
+
+                if (totalQuantity > newItem.stock) {
+                    alert(`No puedes agregar más de ${newItem.stock} unidades de este producto.`);
+                    return currentItems.map(item =>
+                        (item.product_id === newItem.product_id && item.variant_id === newItem.variant_id)
+                            ? { ...item, quantity: newItem.stock } // Cap at max stock
+                            : item
+                    );
+                }
+
                 return currentItems.map(item =>
                     (item.product_id === newItem.product_id && item.variant_id === newItem.variant_id)
-                        ? { ...item, quantity: item.quantity + newItem.quantity }
+                        ? { ...item, quantity: totalQuantity }
                         : item
                 );
             }
+
+            // New item check
+            if (newItem.quantity > newItem.stock) {
+                alert(`Solo hay ${newItem.stock} unidades disponibles.`);
+                return [...currentItems, { ...newItem, quantity: newItem.stock }];
+            }
+
             return [...currentItems, newItem];
         });
     };
@@ -76,12 +95,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     const updateQuantity = (productId: string, quantity: number, variantId?: number) => {
         if (quantity < 1) return;
+
         setItems(currentItems =>
-            currentItems.map(item =>
-                (item.product_id === productId && item.variant_id === variantId)
-                    ? { ...item, quantity }
-                    : item
-            )
+            currentItems.map(item => {
+                if (item.product_id === productId && item.variant_id === variantId) {
+                    if (quantity > item.stock) {
+                        alert(`Solo hay ${item.stock} unidades disponibles.`);
+                        return { ...item, quantity: item.stock };
+                    }
+                    return { ...item, quantity };
+                }
+                return item;
+            })
         );
     };
 
