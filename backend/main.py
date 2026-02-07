@@ -98,7 +98,10 @@ def sync_products(payload: schemas.ProductSyncRequest, db: Session = Depends(get
                 db_product.description = item.description
                 db_product.price = item.price
                 db_product.stock = item.stock
+                db_product.stock = item.stock
                 db_product.image_url = item.image_url
+                if item.images:
+                    db_product.images = json.dumps(item.images)
                 db_product.category = item.category
                 db_product.is_active = item.is_active
                 if item.external_id:
@@ -115,6 +118,7 @@ def sync_products(payload: schemas.ProductSyncRequest, db: Session = Depends(get
                     price=item.price,
                     stock=item.stock,
                     image_url=item.image_url,
+                    images=json.dumps(item.images) if item.images else "[]",
                     category=item.category,
                     is_active=item.is_active
                 )

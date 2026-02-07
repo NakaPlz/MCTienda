@@ -11,6 +11,7 @@ class ProductBase(BaseModel):
     price: float
     stock: int
     image_url: Optional[str] = None
+    images: Optional[List[str]] = []
     category: Optional[str] = None
     is_active: bool = True
 
