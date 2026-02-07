@@ -13,9 +13,36 @@ import models, schemas, database, services.payment, services.shipping, services.
 import uuid
 
 # Crear tablas en la base de datos al inicio
+# Crear tablas en la base de datos al inicio
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Tienda Muy Criollo API", version="0.1.0")
+
+@app.on_event("startup")
+def startup_event():
+    # Automatic Migration for SQLite
+    import sqlite3
+    try:
+        # Assuming database.sqlite is the file or getting from env
+        db_url = os.getenv("DATABASE_URL", "sqlite:///./tienda.db")
+        if "sqlite" in db_url:
+            db_path = db_url.replace("sqlite:///", "")
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            try:
+                cursor.execute("PRAGMA table_info(products)")
+                columns = [info[1] for info in cursor.fetchall()]
+                if "images" not in columns:
+                    print("⚠️ Migrating DB: Adding 'images' column to products table...")
+                    cursor.execute("ALTER TABLE products ADD COLUMN images TEXT")
+                    conn.commit()
+                    print("✅ Migration successful.")
+            except Exception as e:
+                print(f"❌ Migration error: {e}")
+            finally:
+                conn.close()
+    except Exception as e:
+        print(f"Startup migration check failed: {e}")
 
 # Configuración de CORS
 origins = [
