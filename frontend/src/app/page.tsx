@@ -56,16 +56,7 @@ export default function Home() {
     load();
   }, [page, category, search]);
 
-  const handleAddToCart = (product: Product) => {
-    addItem({
-      product_id: product.id,
-      sku: product.sku,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image_url: product.image_url
-    });
-  };
+
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -132,7 +123,6 @@ export default function Home() {
                   <Link key={product.id} href={`/products/${product.id}`} className="block group">
                     <ProductCard
                       product={product}
-                      onAddToCart={handleAddToCart}
                     />
                   </Link>
                 )) : (
