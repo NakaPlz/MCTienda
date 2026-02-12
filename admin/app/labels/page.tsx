@@ -25,7 +25,7 @@ export default function LabelsPage() {
 
     const fetchLabels = async () => {
         try {
-            const res = await fetch(`${API_URL}/admin/labels`, {
+            const res = await fetch(`${API_URL}/admin/labels/`, {
                 headers: { 'x-admin-key': token || '' }
             });
             if (res.ok) {
@@ -43,7 +43,7 @@ export default function LabelsPage() {
         setError('');
 
         try {
-            const res = await fetch(`${API_URL}/admin/labels`, {
+            const res = await fetch(`${API_URL}/admin/labels/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
