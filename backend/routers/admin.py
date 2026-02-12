@@ -14,17 +14,40 @@ router = APIRouter(
     # dependencies=[Depends(get_current_active_user)], # TODO: Add Auth
 )
 
+from jose import jwt, JWTError
+
+# Config matching auth.py
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_fallback_key_change_me")
+ALGORITHM = "HS256"
+
 # Admin Security Dependency
 admin_header = APIKeyHeader(name="x-admin-key", auto_error=False)
 
 async def verify_admin_key(api_key: str = Security(admin_header)):
-    correct_key = os.getenv("ADMIN_API_KEY")
-    if not correct_key:
-        raise HTTPException(status_code=500, detail="Admin security not configured")
-    
-    if api_key != correct_key:
-        raise HTTPException(status_code=403, detail="Admin access denied")
-    return api_key
+    # 1. Check for Static API Key (for Scripts/Integrations)
+    static_key = os.getenv("ADMIN_API_KEY")
+    if static_key and api_key == static_key:
+        return api_key
+
+    # 2. Check for JWT Token (for Admin Panel)
+    if api_key:
+        try:
+            payload = jwt.decode(api_key, SECRET_KEY, algorithms=[ALGORITHM])
+            username: str = payload.get("sub")
+            role: str = payload.get("role")
+            if username and role == "admin":
+                return api_key
+        except JWTError:
+            pass # Fallthrough to error
+
+    # 3. Fail if neither passed
+    if not static_key:
+         # Only raise 500 if we absolutely can't validate anything (no key set and invalid JWT)
+         # However, for clearer DX, we just say access denied if JWT fails.
+         # But if the user meant to use static key and forgot to set it, we might warn.
+         pass 
+
+    raise HTTPException(status_code=403, detail="Admin access denied")
 
 class PriceUpdate(BaseModel):
     price_override: Optional[float] = None
