@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Percent, Filter, Save, AlertTriangle } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface Product {
     id: string;
@@ -28,7 +29,7 @@ export default function PricesPage() {
 
     const fetchProducts = async () => {
         try {
-            const res = await fetch('http://localhost:8000/admin/products?limit=100');
+            const res = await fetch(`${API_URL}/admin/products?limit=100`);
             if (res.ok) {
                 const data = await res.json();
                 setProducts(data);
@@ -43,7 +44,7 @@ export default function PricesPage() {
         // We have /products/categories in main app, maybe admin router doesn't have it explicitly?
         // Let's assume we can get it from the products list for now or use the public one.
         try {
-            const res = await fetch('http://localhost:8000/products/categories');
+            const res = await fetch(`${API_URL}/products/categories`);
             if (res.ok) {
                 const data = await res.json();
                 setCategories(data);
@@ -60,7 +61,7 @@ export default function PricesPage() {
         setMessage(null);
 
         try {
-            const res = await fetch('http://localhost:8000/admin/products/prices/batch', {
+            const res = await fetch(`${API_URL}/admin/products/prices/batch`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

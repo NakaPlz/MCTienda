@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Tag, Plus, Trash2, Save, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { API_URL } from '@/lib/api';
 
 interface Label {
     id: number;
@@ -24,7 +25,7 @@ export default function LabelsPage() {
 
     const fetchLabels = async () => {
         try {
-            const res = await fetch('http://localhost:8000/admin/labels', {
+            const res = await fetch(`${API_URL}/admin/labels`, {
                 headers: { 'x-admin-key': token || '' }
             });
             if (res.ok) {
@@ -42,7 +43,7 @@ export default function LabelsPage() {
         setError('');
 
         try {
-            const res = await fetch('http://localhost:8000/admin/labels', {
+            const res = await fetch(`${API_URL}/admin/labels`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ export default function LabelsPage() {
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta etiqueta?')) return;
         try {
-            const res = await fetch(`http://localhost:8000/admin/labels/${id}`, {
+            const res = await fetch(`${API_URL}/admin/labels/${id}`, {
                 method: 'DELETE',
                 headers: { 'x-admin-key': token || '' }
             });
