@@ -68,9 +68,11 @@ Crea una tercera "Application" (Servicio) para el panel administrativo.
     - **Build Path**: `/admin`
 - **Build**:
     - **Docker Image**: Dejar en blanco (Easypanel detectará Next.js/Node automáticamente).
-- **Environment**:
     - `NEXT_PUBLIC_API_URL`: `https://TU-DOMINIO-BACKEND` (URL pública del backend, ej: `https://api.tutienda.com`).
     - *IMPORTANTE: Esta variable es OBLIGATORIA. Sin ella, el admin intentará conectarse a localhost y fallará en producción.*
+- **Build Args** (Argumentos de Construcción):
+    - *Nota: Si Easypanel tiene una sección separada para "Build Args", debes agregar `NEXT_PUBLIC_API_URL` allí también con el mismo valor.*
+    - *Si no encuentras la sección, asegúrate de que esté en Environment y prueba reconstruir.*
 - **Network**:
     - **Port**: `3000` (Next.js default).
     - Habilita el dominio público (ej: `admin.tutienda.com`).
