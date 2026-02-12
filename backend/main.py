@@ -58,6 +58,18 @@ def startup_event():
                     print("⚠️ Migrating DB: Adding 'payment_id' column to orders table...")
                     cursor.execute("ALTER TABLE orders ADD COLUMN payment_id TEXT")
                     conn.commit()
+
+                # 4. Products Migration (price_override, discount_percentage)
+                cursor.execute("PRAGMA table_info(products)")
+                columns_products = [info[1] for info in cursor.fetchall()]
+                if "price_override" not in columns_products:
+                     print("⚠️ Migrating DB: Adding 'price_override' to products...")
+                     cursor.execute("ALTER TABLE products ADD COLUMN price_override REAL")
+                     conn.commit()
+                if "discount_percentage" not in columns_products:
+                     print("⚠️ Migrating DB: Adding 'discount_percentage' to products...")
+                     cursor.execute("ALTER TABLE products ADD COLUMN discount_percentage INTEGER DEFAULT 0")
+                     conn.commit()
                     
                 print("✅ Migrations successful.")
             except Exception as e:
