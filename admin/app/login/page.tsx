@@ -27,16 +27,21 @@ export default function LoginPage() {
 
             const res = await fetch(`${API_URL}/auth/token`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: formData
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: formData.toString()
             });
 
+            const data = await res.json();
+
             if (res.ok) {
-                const data = await res.json();
                 login(data.access_token);
                 router.push('/');
             } else {
-                setError('Credenciales incorrectas');
+                console.error("Login Error Details:", data); // Log for debugging
+                setError(data.detail || 'Credenciales incorrectas');
             }
         } catch (err) {
             setError('Error de conexión');
