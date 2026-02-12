@@ -29,6 +29,9 @@ Crea una nueva "Application" (Servicio) dentro del proyecto.
         - `MAIL_USERNAME`: `tu-email@gmail.com` (Usa una Contraseña de Aplicación)
         - `MAIL_PASSWORD`: `tu-contraseña-aplicación`
         - `ADMIN_EMAIL`: `muycriolloarg@gmail.com`
+    - **Credenciales Admin**:
+        - `ADMIN_USER`: `admin` (Opcional, default es "admin")
+        - `ADMIN_PASSWORD`: `TuContraseñaSegura` (OBLIGATORIO)
 - **Storage** (Volúmenes):
     - **Mount Path**: `/app/data` (Debe coincidir con la carpeta de la DB).
 - **Network**:
@@ -65,9 +68,11 @@ Crea una tercera "Application" (Servicio) para el panel administrativo.
     - **Build Path**: `/admin`
 - **Build**:
     - **Docker Image**: Dejar en blanco (Easypanel detectará Next.js/Node automáticamente).
-- **Environment**:
-    - `NEXT_PUBLIC_API_URL`: `https://TU-DOMINIO-BACKEND` (URL pública del backend, igual que en frontend pero pública para el navegador).
-    - *Nota: El admin se comunica con el backend PRINCIPALMENTE desde el navegador (Client Components), por lo que necesita la URL pública.*
+    - `NEXT_PUBLIC_API_URL`: `https://TU-DOMINIO-BACKEND` (URL pública del backend, ej: `https://api.tutienda.com`).
+    - *IMPORTANTE: Esta variable es OBLIGATORIA. Sin ella, el admin intentará conectarse a localhost y fallará en producción.*
+- **Build Args** (Argumentos de Construcción):
+    - *Nota: Si Easypanel tiene una sección separada para "Build Args", debes agregar `NEXT_PUBLIC_API_URL` allí también con el mismo valor.*
+    - *Si no encuentras la sección, asegúrate de que esté en Environment y prueba reconstruir.*
 - **Network**:
     - **Port**: `3000` (Next.js default).
     - Habilita el dominio público (ej: `admin.tutienda.com`).

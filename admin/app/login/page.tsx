@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { API_URL } from '@/lib/api';
 
 export default function LoginPage() {
     // We will build a simple robust login form
@@ -24,7 +25,7 @@ export default function LoginPage() {
             formData.append('username', username);
             formData.append('password', password);
 
-            const res = await fetch('http://localhost:8000/auth/token', {
+            const res = await fetch(`${API_URL}/auth/token`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: formData

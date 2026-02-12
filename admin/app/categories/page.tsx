@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Tag, Plus, Trash2, Save, X } from 'lucide-react';
+import { API_URL } from '@/lib/api';
 
 interface Category {
     id: number;
@@ -22,7 +23,7 @@ export default function CategoriesPage() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch('http://localhost:8000/admin/categories');
+            const res = await fetch(`${API_URL}/admin/categories`);
             if (res.ok) {
                 const data = await res.json();
                 setCategories(data);
@@ -38,7 +39,7 @@ export default function CategoriesPage() {
         setError('');
 
         try {
-            const res = await fetch('http://localhost:8000/admin/categories', {
+            const res = await fetch(`${API_URL}/admin/categories`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newCatName, description: newCatDesc })
@@ -62,7 +63,7 @@ export default function CategoriesPage() {
     const handleDelete = async (id: number) => {
         if (!confirm('¿Eliminar esta categoría?')) return;
         try {
-            await fetch(`http://localhost:8000/admin/categories/${id}`, { method: 'DELETE' });
+            await fetch(`${API_URL}/admin/categories/${id}`, { method: 'DELETE' });
             fetchCategories();
         } catch (e) { alert('Error deleting category'); }
     };

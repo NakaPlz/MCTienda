@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Save, Upload, Trash2, GripVertical, X } from 'lucide-react';
 import { fetchProducts, updateProductPrice, addProductImage, deleteImage, reorderImage, getAuthHeaders } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { API_URL } from '@/lib/api';
 
 // Types (Ideally shared or imported from a types file)
 interface ProductImage {
@@ -55,13 +56,13 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
 
     useEffect(() => {
         loadProduct();
-        fetch('http://localhost:8000/admin/categories')
+        fetch(`${API_URL}/admin/categories`)
             .then(res => res.json())
             .then(data => setCategories(data))
             .catch(err => console.error(err));
 
         if (token) {
-            fetch('http://localhost:8000/admin/labels', {
+            fetch(`${API_URL}/admin/labels`, {
                 headers: { 'x-admin-key': token }
             })
                 .then(res => res.json())
@@ -87,13 +88,13 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
             // Let's add getProduct(id) to admin/lib/api.ts for clarity.
 
             // TEMPORARY: Fetch all and find (Inefficient but works for now without new Admin Endpoint for Detail)
-            // Better: Use PUBLIC detail endpoint `http://localhost:8000/products/{id}` which returns the Product model (which includes admin fields? No, schemas need update).
+            // Better: Use PUBLIC detail endpoint `${API_URL}/products/{id}` which returns the Product model (which includes admin fields? No, schemas need update).
             // Admin schemas in backend DO include admin fields.
             // So public GET /products/{id} MIGHT return them if using the same schema?
             // Let's check backend/schemas.py... Product includes ProductBase + Admin Fields. 
             // So yes, PUBLIC endpoint returns admin fields currently! (Security risk? Maybe later separating schemas).
 
-            const res = await fetch(`http://127.0.0.1:8000/products/${unwrapParams.id}`);
+            const res = await fetch(`${API_URL}/products/${unwrapParams.id}`);
             if (!res.ok) throw new Error("Product not found");
             const data = await res.json();
 
@@ -231,7 +232,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
                                                 onClick={async () => {
                                                     const newCats = (product.categories || []).filter((c: any) => c.id !== cat.id).map((c: any) => c.name);
                                                     try {
-                                                        const res = await fetch(`http://localhost:8000/admin/products/${product.id}/details`, {
+                                                        const res = await fetch(`${API_URL}/admin/products/${product.id}/details`, {
                                                             method: 'PUT',
                                                             headers: getAuthHeaders(),
                                                             body: JSON.stringify({ category_names: newCats })
@@ -270,7 +271,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
                                         const newCats = [...currentCats, catName];
 
                                         try {
-                                            const res = await fetch(`http://localhost:8000/admin/products/${product.id}/details`, {
+                                            const res = await fetch(`${API_URL}/admin/products/${product.id}/details`, {
                                                 method: 'PUT',
                                                 headers: getAuthHeaders(),
                                                 body: JSON.stringify({ category_names: newCats })
@@ -313,7 +314,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
                                                 onClick={async () => {
                                                     const newLabelIds = (product.labels || []).filter(l => l.id !== label.id).map(l => l.id);
                                                     try {
-                                                        const res = await fetch(`http://localhost:8000/admin/products/${product.id}/details`, {
+                                                        const res = await fetch(`${API_URL}/admin/products/${product.id}/details`, {
                                                             method: 'PUT',
                                                             headers: getAuthHeaders(),
                                                             body: JSON.stringify({ label_ids: newLabelIds })
@@ -346,7 +347,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
                                         const newLabelIds = [...currentLabels, labelId];
 
                                         try {
-                                            const res = await fetch(`http://localhost:8000/admin/products/${product.id}/details`, {
+                                            const res = await fetch(`${API_URL}/admin/products/${product.id}/details`, {
                                                 method: 'PUT',
                                                 headers: getAuthHeaders(),
                                                 body: JSON.stringify({ label_ids: newLabelIds })
