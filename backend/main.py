@@ -70,7 +70,36 @@ def startup_event():
                      print("⚠️ Migrating DB: Adding 'discount_percentage' to products...")
                      cursor.execute("ALTER TABLE products ADD COLUMN discount_percentage INTEGER DEFAULT 0")
                      conn.commit()
-                    
+                
+                # 5. Labels Migration (Create Table if not exists - Fallback)
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='labels'")
+                if not cursor.fetchone():
+                    print("⚠️ Migrating DB: Creating 'labels' table...")
+                    cursor.execute("""
+                        CREATE TABLE labels (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name VARCHAR,
+                            color VARCHAR DEFAULT '#000000'
+                        )
+                    """)
+                    cursor.execute("CREATE UNIQUE INDEX ix_labels_id ON labels (id)")
+                    cursor.execute("CREATE UNIQUE INDEX ix_labels_name ON labels (name)")
+                    conn.commit()
+
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='product_labels'")
+                if not cursor.fetchone():
+                    print("⚠️ Migrating DB: Creating 'product_labels' table...")
+                    cursor.execute("""
+                        CREATE TABLE product_labels (
+                            product_id VARCHAR,
+                            label_id INTEGER,
+                            PRIMARY KEY (product_id, label_id),
+                            FOREIGN KEY(product_id) REFERENCES products(id),
+                            FOREIGN KEY(label_id) REFERENCES labels(id)
+                        )
+                    """)
+                    conn.commit()
+
                 print("✅ Migrations successful.")
             except Exception as e:
                 print(f"❌ Migration error: {e}")
