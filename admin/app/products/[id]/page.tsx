@@ -62,7 +62,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
             .catch(err => console.error(err));
 
         if (token) {
-            fetch(`${API_URL}/admin/labels`, {
+            fetch(`${API_URL}/admin/labels/`, {
                 headers: { 'x-admin-key': token }
             })
                 .then(res => res.json())
