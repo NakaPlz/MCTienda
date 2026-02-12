@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   keywords: ["campo", "sombreros", "boinas", "cuchillos", "regional", "argentina", "muy criollo"],
 };
 
+import Header from "@/components/Header";
+
+// ... existing imports
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,6 +35,7 @@ export default function RootLayout({
         className={`font-body antialiased bg-background text-foreground`}
       >
         <CartProvider>
+          <Header />
           {children}
         </CartProvider>
       </body>

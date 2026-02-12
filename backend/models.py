@@ -4,6 +4,35 @@ from sqlalchemy.sql import func
 from database import Base
 import uuid
 
+from sqlalchemy import Table
+
+# Association Table for Many-to-Many
+# Association Table for Many-to-Many Categories
+product_categories = Table('product_categories', Base.metadata,
+    Column('product_id', String, ForeignKey('products.id'), primary_key=True),
+    Column('category_id', Integer, ForeignKey('categories.id'), primary_key=True)
+)
+
+# Association Table for Many-to-Many Labels
+product_labels = Table('product_labels', Base.metadata,
+    Column('product_id', String, ForeignKey('products.id'), primary_key=True),
+    Column('label_id', Integer, ForeignKey('labels.id'), primary_key=True)
+)
+
+class Label(Base):
+    __tablename__ = "labels"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    color = Column(String, default="#000000") # Hex Code
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    description = Column(String, nullable=True)
+
 class Product(Base):
     __tablename__ = "products"
 
@@ -16,9 +45,28 @@ class Product(Base):
     stock = Column(Integer, default=0)
     image_url = Column(String, nullable=True)
     images = Column(Text, nullable=True) # JSON list of strings
-    category = Column(String, index=True, nullable=True)
+    category = Column(String, index=True, nullable=True) # DEPRECATED: Use categories relationship
     is_active = Column(Boolean, default=True)
+    
+    # Admin Controls
+    price_override = Column(Float, nullable=True)
+    discount_percentage = Column(Integer, default=0)
+    
     variants = relationship("ProductVariant", back_populates="product")
+    product_images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan")
+    categories = relationship("Category", secondary=product_categories, backref="products")
+    labels = relationship("Label", secondary=product_labels, backref="products")
+
+class ProductImage(Base):
+    __tablename__ = "product_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(String, ForeignKey("products.id"))
+    url = Column(String)
+    display_order = Column(Integer, default=0)
+    color_variant = Column(String, nullable=True) # If null, shows for all. If set, only for that color.
+    
+    product = relationship("Product", back_populates="product_images")
 
 class ProductVariant(Base):
     __tablename__ = "product_variants"
@@ -31,6 +79,11 @@ class ProductVariant(Base):
     stock = Column(Integer, default=0)
 
     product = relationship("Product", back_populates="variants")
+
+
+
+
+
 
 class Customer(Base):
     __tablename__ = "customers"
@@ -55,6 +108,7 @@ class Order(Base):
     delivery_method = Column(String, default="shipping") # shipping, pickup
     shipping_data = Column(Text, nullable=True) # JSON with address or pickup info
     billing_data = Column(Text, nullable=True) # JSON with A/B invoice details
+    payment_id = Column(String, nullable=True) # MercadoPago Payment ID for verification
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -67,6 +121,7 @@ class OrderItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, ForeignKey("orders.id"))
     product_id = Column(String, ForeignKey("products.id"))
+    variant_id = Column(Integer, nullable=True) # Link to specific variant if applicable
     quantity = Column(Integer)
     unit_price = Column(Float)
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getProduct } from '@/lib/api';
@@ -29,6 +29,7 @@ interface Product {
 
 export default function ProductDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const id = params.id as string;
     const { addItem } = useCart();
 
@@ -108,9 +109,12 @@ export default function ProductDetailPage() {
 
     return (
         <div className="min-h-screen p-4 md:p-12 animate-fadeIn max-w-7xl mx-auto">
-            <Link href="/" className="text-gray-400 hover:text-white mb-8 inline-block transition-colors">
-                ← Volver al catálogo
-            </Link>
+            <button
+                onClick={() => router.back()}
+                className="text-gray-400 hover:text-white mb-8 inline-flex items-center gap-2 transition-colors hover:-translate-x-1 duration-300"
+            >
+                ← Volver
+            </button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-card p-8 rounded-2xl border border-gray-800 shadow-2xl">
                 {/* Image Section (Gallery) */}

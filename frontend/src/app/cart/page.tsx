@@ -3,12 +3,23 @@
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { fetchConfig } from '@/lib/api';
 
 export default function CartPage() {
     const { items, total, updateQuantity, removeItem } = useCart();
-    const FREE_SHIPPING_THRESHOLD = 55000;
-    const missingForFreeShipping = FREE_SHIPPING_THRESHOLD - total;
-    const progressPercentage = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 100);
+    const [freeShippingThreshold, setFreeShippingThreshold] = useState(55000);
+
+    useEffect(() => {
+        fetchConfig().then(config => {
+            if (config.free_shipping_threshold) {
+                setFreeShippingThreshold(config.free_shipping_threshold);
+            }
+        });
+    }, []);
+
+    const missingForFreeShipping = freeShippingThreshold - total;
+    const progressPercentage = Math.min((total / freeShippingThreshold) * 100, 100);
 
     if (items.length === 0) {
         return (
@@ -131,7 +142,7 @@ export default function CartPage() {
                             </div>
                             <div className="flex justify-between text-gray-400">
                                 <span>Envío</span>
-                                {total >= FREE_SHIPPING_THRESHOLD ? (
+                                {total >= freeShippingThreshold ? (
                                     <span className="text-green-500">Gratis</span>
                                 ) : (
                                     <span>Por calcular</span>

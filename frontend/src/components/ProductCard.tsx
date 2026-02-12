@@ -1,4 +1,10 @@
-import React from 'react';
+import Image from 'next/image';
+
+interface Label {
+    id: number;
+    name: string;
+    color: string;
+}
 
 interface Product {
     id: string;
@@ -8,6 +14,7 @@ interface Product {
     stock: number;
     image_url?: string;
     description?: string;
+    labels?: Label[];
 }
 
 interface ProductCardProps {
@@ -15,15 +22,37 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+    const hasStock = product.stock > 0;
+
     return (
-        <div className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col h-full">
+        <div className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col h-full relative">
             {/* Image Container */}
             <div className="relative h-64 overflow-hidden bg-gray-900">
+                {/* Badges Overlay */}
+                <div className="absolute top-2 left-2 z-20 flex flex-col gap-1 items-start">
+                    {!hasStock && (
+                        <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                            SIN STOCK
+                        </span>
+                    )}
+                    {product.labels && product.labels.map(label => (
+                        <span
+                            key={label.id}
+                            className="text-white text-xs font-bold px-2 py-1 rounded shadow-sm"
+                            style={{ backgroundColor: label.color }}
+                        >
+                            {label.name}
+                        </span>
+                    ))}
+                </div>
+
                 {product.image_url ? (
-                    <img
+                    <Image
                         src={product.image_url}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className={`object-cover transition-transform duration-500 group-hover:scale-105 ${!hasStock ? 'grayscale opacity-70' : ''}`}
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full text-gray-600 font-light">
@@ -51,9 +80,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     </div>
 
                     <button
-                        className="bg-primary text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500 transition-colors shadow-md active:scale-95 z-10 relative"
+                        disabled={!hasStock}
+                        className={`px-4 py-2 rounded-lg font-bold transition-colors shadow-md active:scale-95 z-10 relative ${hasStock ? 'bg-primary text-black hover:bg-yellow-500' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
                     >
-                        Ver opciones
+                        {hasStock ? 'Ver opciones' : 'Agotado'}
                     </button>
                 </div>
             </div>

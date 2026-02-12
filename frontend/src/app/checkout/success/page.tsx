@@ -36,8 +36,10 @@ function SuccessContent() {
                     await confirmPayment(orderId, payment_id);
                 }
 
-                // Fetch refined order logic
-                const orderData = await getOrder(orderId);
+                // Fetch refined order logic with Security Token (payment_id)
+                // If payment_id is null (e.g. just external_reference), the backend might block PII.
+                // But for success flow, we typically have payment_id from MP.
+                const orderData = await getOrder(orderId, payment_id || undefined);
                 setOrder(orderData);
 
                 // Clear cart once order is confirmed/retrieved

@@ -48,10 +48,6 @@ class PaymentService:
         
         # Validate response
         response = preference_response["response"]
-        
-        with open("debug_mp_response.log", "w") as f:
-            f.write(f"Status: {preference_response.get('status')}\n")
-            f.write(f"Response: {response}\n")
 
         # Use init_point for PRODUCTION (User Request)
         # This will lead to the real payment gateway.

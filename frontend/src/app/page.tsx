@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchProducts } from '@/lib/api';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
+import Sidebar from '@/components/Sidebar';
 
 interface Product {
   id: string;
@@ -15,36 +17,60 @@ interface Product {
   image_url?: string;
   description?: string;
   external_id?: string;
+  category?: string;
 }
 
-// ... imports existing ...
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { addItem, items } = useCart();
 
-export default function Home() {
+  // Read state from URL or Default
+  const page = Number(searchParams.get('page')) || 1;
+  const search = searchParams.get('search') || '';
+  const categories = searchParams.getAll('category'); // Array of strings
+  const minPrice = searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined;
+  const maxPrice = searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined;
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [category, setCategory] = useState(''); // Future sidebar
-  const [search, setSearch] = useState('');
 
-  const { addItem, items } = useCart();
-  const LIMIT = 9;
+  // Local input state for search (to allow typing without constant URL updates)
+  const [localSearch, setLocalSearch] = useState(search);
+
+  // Sync local search input with URL when URL changes (e.g. back button)
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  const LIMIT = 15;
+
+  // Sync state TO URL
+  const updateUrl = (newPage: number, newSearch: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (newPage > 1) params.set('page', newPage.toString());
+    else params.delete('page');
+
+    if (newSearch) params.set('search', newSearch);
+    else params.delete('search');
+
+    router.push(`/?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const data = await fetchProducts(page, LIMIT, category, search);
-        // Backend returns: { items: [], total: 0, page: 1, limit: N }
+        const data = await fetchProducts(page, LIMIT, categories, search, minPrice, maxPrice);
 
         if (data.items) {
           setProducts(data.items);
           setTotalPages(Math.ceil(data.total / LIMIT));
         } else if (Array.isArray(data)) {
-          // Fallback for old API if cached (should not happen but safe)
           setProducts(data);
         } else {
-          // Mock if backend offline locally
           setProducts([]);
         }
       } catch (e) {
@@ -54,117 +80,128 @@ export default function Home() {
       }
     }
     load();
-  }, [page, category, search]);
+  }, [page, JSON.stringify(categories), search, minPrice, maxPrice]);
 
-
+  // Debounced URL update for search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (localSearch !== search) {
+        updateUrl(1, localSearch);
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [localSearch]);
 
   const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-background font-body pb-20">
-      {/* Sticky Glass Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
-          {/* ... Existing header (Logo + Cart) ... */}
-          <div className="flex items-center gap-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-primary font-heading tracking-tight">Muy Criollo</h1>
-              <p className="text-xs text-gray-400 tracking-widest uppercase">Tienda de Campo</p>
-            </div>
-          </div>
+      <main className="container mx-auto max-w-[95%] px-4 sm:px-6 lg:px-8 py-12">
 
-          <div className="flex items-center gap-6">
-            <Link href="/orders/track" className="text-sm font-bold text-gray-300 hover:text-primary transition-colors uppercase tracking-wider hidden sm:block">
-              Seguí tu pedido
-            </Link>
-            <Link href="/cart" className="group relative flex items-center p-2 rounded-full hover:bg-white/5 transition-colors">
-              <div className="relative">
-                <span className="text-2xl group-hover:scale-110 transition-transform block">🛒</span>
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-primary text-black text-xs font-bold h-5 w-5 flex items-center justify-center rounded-full animate-in fade-in zoom-in duration-200">
-                    {cartCount}
-                  </span>
-                )}
-              </div>
-            </Link>
-          </div>
+        {/* Mobile Search Bar (Top) */}
+        <div className="md:hidden w-full mb-6">
+          <input
+            type="text"
+            placeholder="Buscar producto..."
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:border-primary focus:outline-none"
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+          />
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <section>
-          <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
-            <h2 className="text-3xl font-bold font-heading text-white text-center md:text-left">
-              Nuestros Productos
-              <div className="h-1 w-20 bg-primary/30 rounded-full mt-2 mx-auto md:mx-0"></div>
-            </h2>
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Column (Desktop: 20%, Mobile: 100%) - Sticky */}
+          <aside className="w-full md:w-1/5 flex-shrink-0 sticky top-24 h-fit z-10">
+            <Sidebar />
+          </aside>
 
-            {/* Search Bar */}
-            <div className="relative w-full md:w-64">
-              <input
-                type="text"
-                placeholder="Buscar producto..."
-                className="w-full bg-gray-900 border border-gray-700 rounded-full py-2 px-4 text-white focus:border-primary focus:outline-none"
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }} // Reset page on search
-              />
+          {/* Main Content Column (Desktop: 80%) */}
+          <section className="flex-1">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+              <h2 className="text-3xl font-bold font-heading text-white text-center md:text-left">
+                {categories.length > 0 ? categories.join(', ') : 'Todos los Productos'}
+                <div className="h-1 w-20 bg-primary/30 rounded-full mt-2 mx-auto md:mx-0"></div>
+              </h2>
+
+              {/* Desktop Search Bar */}
+              <div className="hidden md:block w-64">
+                <input
+                  type="text"
+                  placeholder="Buscar producto..."
+                  className="w-full bg-gray-900 border border-gray-700 rounded-full py-2 px-4 text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-24 text-gray-500 animate-pulse">
-              <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p>Cargando lo mejor del campo...</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-                {products.length > 0 ? products.map((product) => (
-                  <Link key={product.id} href={`/products/${product.id}`} className="block group">
-                    <ProductCard
-                      product={product}
-                    />
-                  </Link>
-                )) : (
-                  <div className="col-span-full text-center py-12 text-gray-500">
-                    No se encontraron productos.
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-24 text-gray-500 animate-pulse">
+                <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p>Cargando lo mejor del campo...</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {products.length > 0 ? products.map((product) => (
+                    <Link key={product.id} href={`/products/${product.id}?${searchParams.toString()}`} className="block group">
+                      <ProductCard
+                        product={product}
+                      />
+                    </Link>
+                  )) : (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-500 border border-dashed border-gray-800 rounded-xl">
+                      <span className="text-4xl mb-4">🔍</span>
+                      <p className="text-lg">No se encontraron productos.</p>
+                      <p className="text-sm text-gray-600 mt-2">Prueba con otros filtros o términos de búsqueda.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="mt-12 flex justify-center gap-4 items-center">
+                    <button
+                      disabled={page === 1}
+                      onClick={() => {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('page', (page - 1).toString());
+                        router.push(`/?${params.toString()}`, { scroll: false });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="p-2 bg-gray-800 text-white rounded-full hover:bg-primary hover:text-black hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-gray-800 disabled:hover:text-white disabled:cursor-not-allowed transition-all duration-300"
+                      aria-label="Página anterior"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                      </svg>
+                    </button>
+
+                    <span className="text-gray-400 font-mono text-sm uppercase">
+                      <span className="text-white font-bold">{page}</span> / {totalPages}
+                    </span>
+
+                    <button
+                      disabled={page === totalPages}
+                      onClick={() => {
+                        const params = new URLSearchParams(searchParams.toString());
+                        params.set('page', (page + 1).toString());
+                        router.push(`/?${params.toString()}`, { scroll: false });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="p-2 bg-gray-800 text-white rounded-full hover:bg-primary hover:text-black hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-gray-800 disabled:hover:text-white disabled:cursor-not-allowed transition-all duration-300"
+                      aria-label="Página siguiente"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </button>
                   </div>
                 )}
-              </div>
-
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="mt-12 flex justify-center gap-6 items-center">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="p-3 bg-gray-800 text-white rounded-full hover:bg-primary hover:text-black hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-gray-800 disabled:hover:text-white disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
-                    aria-label="Página anterior"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                    </svg>
-                  </button>
-
-                  <span className="flex items-center text-gray-400 font-mono text-sm tracking-widest uppercase">
-                    Página <span className="text-white font-bold mx-2 text-lg">{page}</span> de <span className="mx-2">{totalPages}</span>
-                  </span>
-
-                  <button
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="p-3 bg-gray-800 text-white rounded-full hover:bg-primary hover:text-black hover:scale-110 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:bg-gray-800 disabled:hover:text-white disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
-                    aria-label="Página siguiente"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </section>
+              </>
+            )}
+          </section>
+        </div>
       </main>
 
       <footer className="mt-20 py-12 border-t border-border bg-black/20">
@@ -175,5 +212,13 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background text-white p-20 text-center">Cargando...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

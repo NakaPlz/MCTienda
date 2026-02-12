@@ -90,6 +90,7 @@ export default function CheckoutPage() {
             const orderPayload = {
                 items: items.map(item => ({
                     product_id: item.product_id,
+                    variant_id: item.variant_id, // Added variant support
                     quantity: item.quantity,
                     unit_price: item.price
                 })),
