@@ -53,11 +53,34 @@ Crea otra "Application" (Servicio) dentro del mismo proyecto.
 
 ---
 
-## 4. Verificar Conexión
+
+---
+
+## 4. Servicio Admin (Panel de Control)
+Crea una tercera "Application" (Servicio) para el panel administrativo.
+
+- **Name**: `admin`
+- **Source**:
+    - **Repository**: Misma URL del repo.
+    - **Build Path**: `/admin`
+- **Build**:
+    - **Docker Image**: Dejar en blanco (Easypanel detectará Next.js/Node automáticamente).
+- **Environment**:
+    - `NEXT_PUBLIC_API_URL`: `https://TU-DOMINIO-BACKEND` (URL pública del backend, igual que en frontend pero pública para el navegador).
+    - *Nota: El admin se comunica con el backend PRINCIPALMENTE desde el navegador (Client Components), por lo que necesita la URL pública.*
+- **Network**:
+    - **Port**: `3000` (Next.js default).
+    - Habilita el dominio público (ej: `admin.tutienda.com`).
+
+---
+
+## 5. Verificar Conexión
 1. Entra al dominio del **Frontend**.
 2. Deberías ver tus productos.
-3. Si sale error, revisa los logs del servicio Frontend para ver si falla la conexión a `http://backend:8000`.
+3. Entra al dominio del **Admin**.
+4. Loguéate con la contraseña configurada en `ADMIN_PASSWORD` del Backend.
 
-## 5. Webhook Inbound (Para recibir stock)
+## 6. Webhook Inbound (Para recibir stock)
 Una vez desplegado el Backend, tu URL para configurar en la Plataforma de Gestión será:
 `https://TU-DOMINIO-BACKEND/webhooks/products`
+

@@ -14,6 +14,10 @@ class ProductBase(BaseModel):
     images: Optional[List[str]] = []
     category: Optional[str] = None
     is_active: bool = True
+    
+    # Admin Fields
+    price_override: Optional[float] = None
+    discount_percentage: int = 0
 
 class ProductCreate(ProductBase):
     pass
@@ -35,15 +39,42 @@ class ProductVariant(ProductVariantBase):
     class Config:
         from_attributes = True
 
-from pydantic import BaseModel, field_validator
-import json
+class ProductImageBase(BaseModel):
+    url: str
+    display_order: int = 0
+    color_variant: Optional[str] = None
 
-# ... (ProductBase remains the same, or we add images there? Let's add it to Product primarily)
+class ProductImage(ProductImageBase):
+    id: int
+    product_id: str
+    class Config:
+        from_attributes = True
+
+class Category(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+class LabelCreate(BaseModel):
+    name: str
+    color: str
+
+class Label(BaseModel):
+    id: int
+    name: str
+    color: str
+    class Config:
+        from_attributes = True
 
 class Product(ProductBase):
     id: str
     updated_at: Optional[datetime] = None
     variants: List[ProductVariant] = []
+    product_images: List[ProductImage] = [] # New relationship
+    categories: List[Category] = [] # Many-to-Many
+    labels: List[Label] = [] # Many-to-Many
     images: Optional[List[str]] = []
 
     @field_validator('images', mode='before')
@@ -98,6 +129,7 @@ class Customer(CustomerBase):
 # Order Schemas
 class OrderItemBase(BaseModel):
     product_id: str
+    variant_id: Optional[int] = None
     quantity: int
     unit_price: float
 
@@ -153,7 +185,12 @@ class Order(BaseModel):
     customer: Customer
     items: List[OrderItem]
     payment_url: Optional[str] = None
+    payment_id: Optional[str] = None
     shipping_data: Optional[str] = None # JSON string
     billing_data: Optional[str] = None # JSON string
     class Config:
         from_attributes = True
+
+class OrderTrackRequest(BaseModel):
+    order_id: int
+    email: str

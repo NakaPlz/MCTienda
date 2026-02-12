@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { getOrder } from '@/lib/api';
+import { trackOrder } from '@/lib/api';
 
 export default function TrackOrderPage() {
     const [orderId, setOrderId] = useState('');
@@ -18,19 +18,12 @@ export default function TrackOrderPage() {
         setOrder(null);
 
         try {
-            const data = await getOrder(parseInt(orderId));
-
-            // Simple Client-side verification for MVP privacy
-            // Ideally backend should verify email, but current endpoint is public (GET /orders/{id})
-            // We check matching email here to show data.
-            if (data && data.customer && data.customer.email.toLowerCase() === email.toLowerCase()) {
-                setOrder(data);
-            } else {
-                setError('No encontramos una orden con esos datos. Verifica el ID y el Email.');
-            }
+            // Use Secure Endpoint
+            const data = await trackOrder(parseInt(orderId), email);
+            setOrder(data);
         } catch (err) {
             console.error(err);
-            setError('Error al consultar. Intenta nuevamente.');
+            setError('No encontramos una orden con esos datos. Verifica el ID y el Email.');
         } finally {
             setLoading(false);
         }

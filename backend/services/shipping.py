@@ -14,14 +14,15 @@ class ShippingService:
         """
         Calcula el costo de envío.
         - Si es 'pickup' -> $0
-        - Si es 'shipping' y total >= 35000 -> $0
-        - Si es 'shipping' y total < 35000  -> $100
+        - Si es 'shipping' y total >= THRESHOLD -> $0
+        - Si es 'shipping' y total < THRESHOLD  -> $10000
         """
         if delivery_method == "pickup":
             return 0.0
 
-        # Regla simple solicitada por el usuario
-        if total_amount >= 55000:
+        threshold = float(os.getenv("FREE_SHIPPING_THRESHOLD", 55000))
+
+        if total_amount >= threshold:
             return 0.0
         else:
             return 10000.0
