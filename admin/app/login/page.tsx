@@ -24,6 +24,7 @@ export default function LoginPage() {
             const formData = new URLSearchParams();
             formData.append('username', username);
             formData.append('password', password);
+            formData.append('grant_type', 'password');
 
             const res = await fetch(`${API_URL}/auth/token`, {
                 method: 'POST',
@@ -40,8 +41,17 @@ export default function LoginPage() {
                 login(data.access_token);
                 router.push('/');
             } else {
-                console.error("Login Error Details:", data); // Log for debugging
-                setError(data.detail || 'Credenciales incorrectas');
+                console.error("Login Error Details:", data);
+                // Handle FastAPI validation errors (array) or simple errors (string)
+                let errorMessage = 'Credenciales incorrectas';
+                if (data.detail) {
+                    if (Array.isArray(data.detail)) {
+                        errorMessage = data.detail.map((err: any) => err.msg).join(', ');
+                    } else {
+                        errorMessage = data.detail;
+                    }
+                }
+                setError(errorMessage);
             }
         } catch (err) {
             setError('Error de conexión');
