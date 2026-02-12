@@ -29,6 +29,9 @@ Crea una nueva "Application" (Servicio) dentro del proyecto.
         - `MAIL_USERNAME`: `tu-email@gmail.com` (Usa una Contraseña de Aplicación)
         - `MAIL_PASSWORD`: `tu-contraseña-aplicación`
         - `ADMIN_EMAIL`: `muycriolloarg@gmail.com`
+    - **Credenciales Admin**:
+        - `ADMIN_USER`: `admin` (Opcional, default es "admin")
+        - `ADMIN_PASSWORD`: `TuContraseñaSegura` (OBLIGATORIO)
 - **Storage** (Volúmenes):
     - **Mount Path**: `/app/data` (Debe coincidir con la carpeta de la DB).
 - **Network**:
