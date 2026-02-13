@@ -83,19 +83,19 @@ export default function ProductDetailPage() {
     // --- Price Logic ---
     const originalPrice = product.price;
     const hasOverride = product.price_override !== null && product.price_override !== undefined;
-    const hasDiscount = (product.discount_percentage ?? 0) > 0;
+    const hasPercentage = (product.discount_percentage ?? 0) !== 0;
 
     let finalPrice = originalPrice;
     if (hasOverride) {
         finalPrice = product.price_override!;
-    } else if (hasDiscount) {
+    } else if (hasPercentage) {
         finalPrice = originalPrice * (1 - (product.discount_percentage! / 100));
     }
     finalPrice = Math.round(finalPrice);
 
-    const isDiscounted = hasOverride
-        ? finalPrice < originalPrice
-        : hasDiscount;
+    // Only show discount styling when price actually went DOWN
+    const isDiscounted = finalPrice < originalPrice;
+    const hasDiscount = (product.discount_percentage ?? 0) > 0;
 
     const handleAddToCart = () => {
         if (product.variants && product.variants.length > 0 && !selectedVariant) {
