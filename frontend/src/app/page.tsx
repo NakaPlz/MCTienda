@@ -18,6 +18,8 @@ interface Product {
   description?: string;
   external_id?: string;
   category?: string;
+  price_override?: number | null;
+  discount_percentage?: number;
 }
 
 function HomeContent() {
