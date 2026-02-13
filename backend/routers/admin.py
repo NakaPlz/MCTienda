@@ -188,7 +188,7 @@ def update_product_details(
 @router.get("/products", response_model=List[schemas.Product])
 def get_admin_products(
     skip: int = 0, 
-    limit: int = 50, 
+    limit: int = 500, 
     search: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
