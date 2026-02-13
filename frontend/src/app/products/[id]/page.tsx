@@ -25,6 +25,8 @@ interface Product {
     images?: string[];
     category: string;
     variants: Variant[];
+    price_override?: number | null;
+    discount_percentage?: number;
 }
 
 export default function ProductDetailPage() {
@@ -78,6 +80,23 @@ export default function ProductDetailPage() {
     if (loading) return <div className="text-center text-white p-20 animate-pulse">Cargando producto...</div>;
     if (!product) return <div className="text-center text-white p-20">Producto no encontrado</div>;
 
+    // --- Price Logic ---
+    const originalPrice = product.price;
+    const hasOverride = product.price_override !== null && product.price_override !== undefined;
+    const hasDiscount = (product.discount_percentage ?? 0) > 0;
+
+    let finalPrice = originalPrice;
+    if (hasOverride) {
+        finalPrice = product.price_override!;
+    } else if (hasDiscount) {
+        finalPrice = originalPrice * (1 - (product.discount_percentage! / 100));
+    }
+    finalPrice = Math.round(finalPrice);
+
+    const isDiscounted = hasOverride
+        ? finalPrice < originalPrice
+        : hasDiscount;
+
     const handleAddToCart = () => {
         if (product.variants && product.variants.length > 0 && !selectedVariant) {
             alert("Por favor selecciona las opciones (Color/Talle) antes de agregar.");
@@ -91,7 +110,7 @@ export default function ProductDetailPage() {
             variant_id: variantToAdd?.id,
             sku: variantToAdd ? variantToAdd.sku : product.id,
             name: product.name,
-            price: product.price,
+            price: finalPrice,
             quantity: 1,
             stock: variantToAdd ? variantToAdd.stock : (product.stock || 0),
             image_url: product.image_url,
@@ -153,7 +172,22 @@ export default function ProductDetailPage() {
                     <div>
                         <span className="text-primary text-sm font-bold tracking-wider uppercase">{product.category || 'Producto'}</span>
                         <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 leading-tight">{product.name}</h1>
-                        <p className="text-3xl text-primary font-mono font-bold mt-4">${product.price.toLocaleString()}</p>
+                        <div className="mt-4 flex items-center gap-3 flex-wrap">
+                            {isDiscounted && (
+                                <p className="text-xl text-gray-500 font-mono line-through">${originalPrice.toLocaleString()}</p>
+                            )}
+                            <p className={`text-3xl font-mono font-bold ${isDiscounted ? 'text-green-400' : 'text-primary'}`}>${finalPrice.toLocaleString()}</p>
+                            {isDiscounted && hasDiscount && (
+                                <span className="bg-green-600 text-white text-sm font-bold px-2 py-1 rounded">
+                                    -{product.discount_percentage}%
+                                </span>
+                            )}
+                            {isDiscounted && hasOverride && !hasDiscount && (
+                                <span className="bg-green-600 text-white text-sm font-bold px-2 py-1 rounded">
+                                    OFERTA
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     <div className="prose prose-invert text-gray-400 leading-relaxed">

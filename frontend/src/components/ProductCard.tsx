@@ -15,6 +15,8 @@ interface Product {
     image_url?: string;
     description?: string;
     labels?: Label[];
+    price_override?: number | null;
+    discount_percentage?: number;
 }
 
 interface ProductCardProps {
@@ -23,6 +25,22 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const hasStock = product.stock > 0;
+
+    // --- Price Logic ---
+    const originalPrice = product.price;
+    const hasOverride = product.price_override !== null && product.price_override !== undefined;
+    const hasDiscount = (product.discount_percentage ?? 0) > 0;
+
+    let finalPrice = originalPrice;
+    if (hasOverride) {
+        finalPrice = product.price_override!;
+    } else if (hasDiscount) {
+        finalPrice = originalPrice * (1 - (product.discount_percentage! / 100));
+    }
+
+    const isDiscounted = hasOverride
+        ? finalPrice < originalPrice
+        : hasDiscount;
 
     return (
         <div className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col h-full relative">
@@ -33,6 +51,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     {!hasStock && (
                         <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
                             SIN STOCK
+                        </span>
+                    )}
+                    {isDiscounted && (
+                        <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                            {hasDiscount ? `-${product.discount_percentage}%` : 'OFERTA'}
                         </span>
                     )}
                     {product.labels && product.labels.map(label => (
@@ -74,8 +97,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <div className="mt-auto flex items-end justify-between gap-4">
                     <div className="flex flex-col">
                         <span className="text-xs text-gray-400 font-light">Precio</span>
-                        <span className="text-2xl font-bold text-white tracking-tight">
-                            ${product.price.toLocaleString()}
+                        {isDiscounted && (
+                            <span className="text-sm text-gray-500 line-through">
+                                ${originalPrice.toLocaleString()}
+                            </span>
+                        )}
+                        <span className={`text-2xl font-bold tracking-tight ${isDiscounted ? 'text-green-400' : 'text-white'}`}>
+                            ${Math.round(finalPrice).toLocaleString()}
                         </span>
                     </div>
 
