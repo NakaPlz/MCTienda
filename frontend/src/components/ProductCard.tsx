@@ -29,18 +29,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     // --- Price Logic ---
     const originalPrice = product.price;
     const hasOverride = product.price_override !== null && product.price_override !== undefined;
-    const hasDiscount = (product.discount_percentage ?? 0) > 0;
+    const hasPercentage = (product.discount_percentage ?? 0) !== 0;
 
     let finalPrice = originalPrice;
     if (hasOverride) {
         finalPrice = product.price_override!;
-    } else if (hasDiscount) {
+    } else if (hasPercentage) {
         finalPrice = originalPrice * (1 - (product.discount_percentage! / 100));
     }
 
-    const isDiscounted = hasOverride
-        ? finalPrice < originalPrice
-        : hasDiscount;
+    // Only show discount styling when price actually went DOWN
+    const isDiscounted = finalPrice < originalPrice;
 
     return (
         <div className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col h-full relative">
@@ -55,7 +54,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     )}
                     {isDiscounted && (
                         <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
-                            {hasDiscount ? `-${product.discount_percentage}%` : 'OFERTA'}
+                            {(product.discount_percentage ?? 0) > 0 ? `-${product.discount_percentage}%` : 'OFERTA'}
                         </span>
                     )}
                     {product.labels && product.labels.map(label => (
