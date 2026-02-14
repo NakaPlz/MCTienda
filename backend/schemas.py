@@ -20,7 +20,7 @@ class ProductBase(BaseModel):
     discount_percentage: int = 0
 
 class ProductCreate(ProductBase):
-    pass
+    variants: Optional[List["VariantUpdate"]] = []
 
 class ProductUpdate(ProductBase):
     pass

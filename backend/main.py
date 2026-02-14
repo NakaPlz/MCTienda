@@ -167,7 +167,6 @@ def sync_products(payload: schemas.ProductSyncRequest, db: Session = Depends(get
                 db_product.description = item.description
                 db_product.price = item.price
                 db_product.stock = item.stock
-                db_product.stock = item.stock
                 db_product.image_url = item.image_url
                 if item.images:
                     db_product.images = json.dumps(item.images)
@@ -217,7 +216,45 @@ def sync_products(payload: schemas.ProductSyncRequest, db: Session = Depends(get
                             db.flush()
                         new_product.categories.append(category)
                 db.add(new_product)
+                db.flush()
+                db_product = new_product
                 results["created"] += 1
+            
+            # --- Sync Variants (if provided) ---
+            if item.variants:
+                current_variant_skus = [v.sku for v in item.variants]
+                
+                # Delete variants not in payload
+                db.query(models.ProductVariant).filter(
+                    models.ProductVariant.product_id == db_product.id,
+                    models.ProductVariant.sku.notin_(current_variant_skus)
+                ).delete(synchronize_session=False)
+                
+                total_stock = 0
+                for v in item.variants:
+                    db_variant = db.query(models.ProductVariant).filter(
+                        models.ProductVariant.sku == v.sku
+                    ).first()
+                    
+                    if db_variant:
+                        db_variant.stock = v.stock
+                        db_variant.size = v.size
+                        db_variant.color = v.color
+                        db_variant.product_id = db_product.id
+                    else:
+                        db_variant = models.ProductVariant(
+                            product_id=db_product.id,
+                            sku=v.sku,
+                            stock=v.stock,
+                            size=v.size,
+                            color=v.color
+                        )
+                        db.add(db_variant)
+                    
+                    total_stock += v.stock
+                
+                # Recalculate total product stock from variants
+                db_product.stock = total_stock
                 
         except Exception as e:
             print(f"Error syncing product {item.sku}: {e}")
