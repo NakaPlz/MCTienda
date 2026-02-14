@@ -13,6 +13,7 @@ load_dotenv()
 import models, schemas, database, services.payment, services.shipping, services.email, services.integration
 import services.integration
 import uuid
+import unicodedata
 from routers import admin, auth, labels
 
 # Crear tablas en la base de datos al inicio
