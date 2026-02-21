@@ -18,8 +18,9 @@ export default function Header() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <Link href="/orders/track" className="text-sm font-bold text-gray-300 hover:text-primary transition-colors uppercase tracking-wider hidden sm:block">
-                        Seguí tu pedido
+                    <Link href="/orders/track" className="text-sm font-bold text-gray-300 hover:text-primary transition-colors tracking-wider flex items-center gap-1">
+                        <span className="hidden sm:inline uppercase">Seguí tu pedido</span>
+                        <span className="sm:hidden text-xl" title="Seguí tu pedido">📦</span>
                     </Link>
                     <Link href="/cart" className="group relative flex items-center p-2 rounded-full hover:bg-white/5 transition-colors">
                         <div className="relative">
