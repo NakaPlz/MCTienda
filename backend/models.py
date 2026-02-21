@@ -19,6 +19,17 @@ product_labels = Table('product_labels', Base.metadata,
     Column('label_id', Integer, ForeignKey('labels.id'), primary_key=True)
 )
 
+class SizeGuide(Base):
+    __tablename__ = "size_guides"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    image_url = Column(String, nullable=True)
+    content = Column(Text, nullable=True)
+
+    products = relationship("Product", back_populates="size_guide")
+
+
 class Label(Base):
     __tablename__ = "labels"
 
@@ -51,6 +62,10 @@ class Product(Base):
     # Admin Controls
     price_override = Column(Float, nullable=True)
     discount_percentage = Column(Integer, default=0)
+    
+    # Size Guide Reference
+    size_guide_id = Column(Integer, ForeignKey('size_guides.id'), nullable=True)
+    size_guide = relationship("SizeGuide", back_populates="products")
     
     variants = relationship("ProductVariant", back_populates="product")
     product_images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan")

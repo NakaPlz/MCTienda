@@ -6,8 +6,7 @@ from routers.admin import verify_admin_key
 
 router = APIRouter(
     prefix="/admin/labels",
-    tags=["labels"],
-    dependencies=[Depends(verify_admin_key)]
+    tags=["labels"]
 )
 
 def get_db():
@@ -18,11 +17,19 @@ def get_db():
         db.close()
 
 @router.get("/", response_model=List[schemas.Label])
-def get_labels(db: Session = Depends(get_db)):
+def get_labels(
+    db: Session = Depends(get_db),
+    # admin_key: str = Security(verify_admin_key) # Optional: Maybe GET is public, but let's keep it protected:
+    admin_key: str = Depends(verify_admin_key)
+):
     return db.query(models.Label).all()
 
 @router.post("/", response_model=schemas.Label, status_code=status.HTTP_201_CREATED)
-def create_label(label: schemas.LabelCreate, db: Session = Depends(get_db)):
+def create_label(
+    label: schemas.LabelCreate, 
+    db: Session = Depends(get_db),
+    admin_key: str = Depends(verify_admin_key)
+):
     db_label = models.Label(name=label.name, color=label.color)
     db.add(db_label)
     db.commit()
@@ -30,7 +37,12 @@ def create_label(label: schemas.LabelCreate, db: Session = Depends(get_db)):
     return db_label
 
 @router.put("/{label_id}", response_model=schemas.Label)
-def update_label(label_id: int, label_update: schemas.LabelCreate, db: Session = Depends(get_db)):
+def update_label(
+    label_id: int, 
+    label_update: schemas.LabelCreate, 
+    db: Session = Depends(get_db),
+    admin_key: str = Depends(verify_admin_key)
+):
     db_label = db.query(models.Label).filter(models.Label.id == label_id).first()
     if not db_label:
         raise HTTPException(status_code=404, detail="Label not found")
@@ -42,7 +54,11 @@ def update_label(label_id: int, label_update: schemas.LabelCreate, db: Session =
     return db_label
 
 @router.delete("/{label_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_label(label_id: int, db: Session = Depends(get_db)):
+def delete_label(
+    label_id: int, 
+    db: Session = Depends(get_db),
+    admin_key: str = Depends(verify_admin_key)
+):
     db_label = db.query(models.Label).filter(models.Label.id == label_id).first()
     if not db_label:
         raise HTTPException(status_code=404, detail="Label not found")

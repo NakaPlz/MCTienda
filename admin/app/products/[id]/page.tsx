@@ -9,6 +9,10 @@ import { useAuth } from '@/lib/auth';
 import { API_URL } from '@/lib/api';
 
 // Types (Ideally shared or imported from a types file)
+interface SizeGuide {
+    id: number;
+    name: string;
+}
 interface ProductImage {
     id: number;
     url: string;
@@ -30,6 +34,7 @@ interface Product {
     stock: number;
     image_url?: string;
     description?: string;
+    size_guide_id?: number;
     categories?: { id: number; name: string }[]; // New relation
     labels?: Label[]; // New relation
     price_override?: number;
@@ -51,14 +56,25 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
 
     // Image State
     const [newImageUrl, setNewImageUrl] = useState('');
+    // Extensions State
     const [categories, setCategories] = useState<any[]>([]);
     const [allLabels, setAllLabels] = useState<Label[]>([]);
+    const [allSizeGuides, setAllSizeGuides] = useState<SizeGuide[]>([]);
+    const [description, setDescription] = useState('');
+    const [isSavingDesc, setIsSavingDesc] = useState(false);
 
     useEffect(() => {
         loadProduct();
         fetch(`${API_URL}/admin/categories`)
             .then(res => res.json())
             .then(data => setCategories(data))
+            .catch(err => console.error(err));
+
+        fetch(`${API_URL}/size-guides`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setAllSizeGuides(data);
+            })
             .catch(err => console.error(err));
 
         if (token) {
@@ -101,6 +117,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
             setProduct(data);
             setPriceOverride(data.price_override?.toString() || '');
             setDiscount(data.discount_percentage?.toString() || '');
+            setDescription(data.description || '');
 
         } catch (e) {
             console.error(e);
@@ -142,6 +159,40 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
             loadProduct();
         } catch (e) {
             alert('Error al eliminar imagen');
+        }
+    }
+
+    async function handleSaveDescription() {
+        if (!product) return;
+        setIsSavingDesc(true);
+        try {
+            const res = await fetch(`${API_URL}/admin/products/${product.id}/details`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ description })
+            });
+            if (!res.ok) throw new Error("Failed to save description");
+            alert('Descripción guardada');
+        } catch (e) {
+            alert('Error al guardar descripción');
+        } finally {
+            setIsSavingDesc(false);
+        }
+    }
+
+    async function handleSizeGuideChange(e: React.ChangeEvent<HTMLSelectElement>) {
+        if (!product) return;
+        const val = e.target.value ? parseInt(e.target.value) : 0;
+        try {
+            const res = await fetch(`${API_URL}/admin/products/${product.id}/details`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ size_guide_id: val })
+            });
+            if (!res.ok) throw new Error("Failed to set size guide");
+            setProduct({ ...product, size_guide_id: val === 0 ? undefined : val });
+        } catch (err) {
+            alert('Error al actualizar la guía de talles');
         }
     }
 
@@ -372,7 +423,24 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
                                 </select>
                             </div>
 
-                            <div className="flex justify-between border-t border-border pt-2">
+                            <hr className="border-border my-4" />
+
+                            {/* Size Guide */}
+                            <div>
+                                <label className="block text-gray-400 mb-2">Guía de Talles</label>
+                                <select
+                                    value={product.size_guide_id || ""}
+                                    onChange={handleSizeGuideChange}
+                                    className="w-full bg-background border border-border rounded px-2 py-2 text-foreground focus:ring-2 focus:ring-primary text-sm"
+                                >
+                                    <option value="">Ninguna</option>
+                                    {allSizeGuides.map(guide => (
+                                        <option key={guide.id} value={guide.id}>{guide.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex justify-between border-t border-border pt-4 mt-2">
                                 <span className="text-gray-400">Stock Total:</span>
                                 <span className="font-medium text-foreground">{product.stock}</span>
                             </div>
@@ -434,12 +502,25 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
                         </div>
                     </div>
 
-                    {/* Description Card (Read Only for now or Simple Edit) */}
+                    {/* Description Card */}
                     <div className="bg-card p-6 rounded-xl shadow-lg border border-border">
-                        <h3 className="text-lg font-bold mb-4 text-foreground">Descripción</h3>
-                        <div className="prose max-w-none text-gray-400 whitespace-pre-line">
-                            {product.description || 'Sin descripción.'}
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-foreground">Descripción</h3>
+                            <button
+                                onClick={handleSaveDescription}
+                                disabled={isSavingDesc}
+                                className="px-4 py-1.5 bg-primary/20 text-primary hover:bg-primary/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                            >
+                                <Save size={16} /> {isSavingDesc ? 'Guardando...' : 'Guardar'}
+                            </button>
                         </div>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={8}
+                            className="w-full bg-background border border-border rounded-lg p-4 text-foreground focus:ring-2 focus:ring-primary focus:outline-none resize-y"
+                            placeholder="Escribe la descripción del producto aquí..."
+                        />
                     </div>
                 </div>
             </div>

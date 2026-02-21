@@ -14,7 +14,7 @@ import models, schemas, database, services.payment, services.shipping, services.
 import services.integration
 import uuid
 import unicodedata
-from routers import admin, auth, labels
+from routers import admin, auth, labels, size_guides
 
 # Crear tablas en la base de datos al inicio
 models.Base.metadata.create_all(bind=database.engine)
@@ -23,6 +23,7 @@ app = FastAPI(title="Tienda Muy Criollo API", version="0.1.0")
 app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(labels.router)
+app.include_router(size_guides.router)
 
 @app.on_event("startup")
 def startup_event():
@@ -70,6 +71,10 @@ def startup_event():
                 if "discount_percentage" not in columns_products:
                      print("⚠️ Migrating DB: Adding 'discount_percentage' to products...")
                      cursor.execute("ALTER TABLE products ADD COLUMN discount_percentage INTEGER DEFAULT 0")
+                     conn.commit()
+                if "size_guide_id" not in columns_products:
+                     print("⚠️ Migrating DB: Adding 'size_guide_id' to products...")
+                     cursor.execute("ALTER TABLE products ADD COLUMN size_guide_id INTEGER REFERENCES size_guides(id)")
                      conn.commit()
                 
                 # 5. Labels Migration (Create Table if not exists - Fallback)

@@ -68,9 +68,24 @@ class Label(BaseModel):
     class Config:
         from_attributes = True
 
+class SizeGuideBase(BaseModel):
+    name: str
+    image_url: Optional[str] = None
+    content: Optional[str] = None
+
+class SizeGuideCreate(SizeGuideBase):
+    pass
+
+class SizeGuide(SizeGuideBase):
+    id: int
+    class Config:
+        from_attributes = True
+
 class Product(ProductBase):
     id: str
     updated_at: Optional[datetime] = None
+    size_guide_id: Optional[int] = None
+    size_guide: Optional[SizeGuide] = None
     variants: List[ProductVariant] = []
     product_images: List[ProductImage] = [] # New relationship
     categories: List[Category] = [] # Many-to-Many
@@ -110,6 +125,13 @@ class ProductUpdatePayload(BaseModel):
     images: Optional[List[str]] = []
     category: Optional[str] = None
     variants: List[VariantUpdate] = []
+
+class ProductDetailUpdate(BaseModel):
+    category_names: Optional[List[str]] = None
+    label_ids: Optional[List[int]] = None
+    description: Optional[str] = None
+    size_guide_id: Optional[int] = None
+    # Add other fields here if needed (e.g. name)
 
 # Customer Schemas
 class CustomerBase(BaseModel):
