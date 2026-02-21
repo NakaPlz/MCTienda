@@ -137,20 +137,24 @@ def delete_category(cat_id: int, db: Session = Depends(get_db)):
 
 # --- Product Management ---
 
-class ProductDetailUpdate(BaseModel):
-    category_names: Optional[List[str]] = None
-    label_ids: Optional[List[int]] = None
-    # Add other fields here if needed (e.g. name, description)
-
 @router.put("/products/{product_id}/details")
 def update_product_details(
     product_id: str,
-    details: ProductDetailUpdate,
+    details: schemas.ProductDetailUpdate,
     db: Session = Depends(get_db)
 ):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
          raise HTTPException(status_code=404, detail="Product not found")
+         
+    if details.description is not None:
+        product.description = details.description
+        
+    if details.size_guide_id is not None:
+        if details.size_guide_id == 0:
+            product.size_guide_id = None
+        else:
+            product.size_guide_id = details.size_guide_id
          
     if details.category_names is not None:
         # Clear current categories

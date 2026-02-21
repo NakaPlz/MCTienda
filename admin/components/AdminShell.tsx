@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import Link from 'next/link';
-import { Package, LayoutDashboard, Percent, Tag, LogOut, Bookmark } from 'lucide-react';
+import { Package, LayoutDashboard, Percent, Tag, LogOut, Bookmark, Ruler } from 'lucide-react';
 
 function ShellContent({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, logout } = useAuth();
@@ -44,6 +44,10 @@ function ShellContent({ children }: { children: React.ReactNode }) {
                     <Link href="/labels" className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${pathname === '/labels' ? 'bg-secondary text-primary' : 'text-gray-400 hover:bg-secondary hover:text-primary'}`}>
                         <Bookmark size={20} />
                         <span>Etiquetas</span>
+                    </Link>
+                    <Link href="/size-guides" className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${pathname.startsWith('/size-guides') ? 'bg-secondary text-primary' : 'text-gray-400 hover:bg-secondary hover:text-primary'}`}>
+                        <Ruler size={20} />
+                        <span>Guías de Talles</span>
                     </Link>
                 </nav>
 

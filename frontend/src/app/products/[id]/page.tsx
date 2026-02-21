@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Ruler, X } from 'lucide-react';
 import { getProduct } from '@/lib/api';
 import { useCart } from '@/context/CartContext';
 
@@ -13,6 +14,13 @@ interface Variant {
     size: string | null;
     color: string | null;
     stock: number;
+}
+
+interface SizeGuide {
+    id: number;
+    name: string;
+    image_url?: string;
+    content?: string;
 }
 
 interface Product {
@@ -25,6 +33,7 @@ interface Product {
     images?: string[];
     category: string;
     variants: Variant[];
+    size_guide?: SizeGuide;
     price_override?: number | null;
     discount_percentage?: number;
 }
@@ -41,6 +50,7 @@ export default function ProductDetailPage() {
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
     const [mainImage, setMainImage] = useState<string | null>(null);
+    const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
     // Resolve variant when selections change
     useEffect(() => {
@@ -138,13 +148,13 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-card p-8 rounded-2xl border border-gray-800 shadow-2xl">
                 {/* Image Section (Gallery) */}
                 <div className="flex flex-col gap-4">
-                    <div className="relative aspect-square w-full bg-gray-700 rounded-xl overflow-hidden group border border-gray-700">
+                    <div className="relative aspect-square w-full bg-white rounded-xl overflow-hidden group border border-border">
                         {currentImage ? (
                             <Image
                                 src={currentImage}
                                 alt={product.name}
                                 fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                className="object-contain p-4 transition-transform duration-700 group-hover:scale-110"
                             />
                         ) : (
                             <div className="flex bg-gray-800 h-full items-center justify-center text-gray-500">Sin Imagen</div>
@@ -190,13 +200,24 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
 
-                    <div className="prose prose-invert text-gray-400 leading-relaxed">
+                    <div className="prose prose-invert text-gray-400 leading-relaxed whitespace-pre-line">
                         <p>
                             {product.description && !product.description.includes("Importado de Mercado Libre")
                                 ? product.description
                                 : ""}
                         </p>
                     </div>
+
+                    {product.size_guide && (
+                        <div>
+                            <button
+                                onClick={() => setIsSizeGuideOpen(true)}
+                                className="flex items-center gap-2 text-primary hover:text-yellow-400 font-bold transition-colors bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-lg border border-primary/20 w-fit"
+                            >
+                                <Ruler size={18} /> Ver tabla de medidas
+                            </button>
+                        </div>
+                    )}
 
                     {/* Variants Selector - Dynamic Logic */}
                     {product.variants && product.variants.length > 0 && (
@@ -331,6 +352,37 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Size Guide Modal */}
+            {isSizeGuideOpen && product.size_guide && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-fadeIn">
+                    <div className="bg-card w-full max-w-2xl rounded-2xl overflow-hidden border border-border flex flex-col max-h-[90vh]">
+                        <div className="p-4 border-b border-border flex justify-between items-center bg-secondary/50">
+                            <h3 className="text-xl font-bold flex items-center gap-2"><Ruler className="text-primary" /> {product.size_guide.name}</h3>
+                            <button onClick={() => setIsSizeGuideOpen(false)} className="text-gray-400 hover:text-white transition p-1">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar">
+                            {product.size_guide.image_url && (
+                                <div className="mb-6 border border-border rounded-xl overflow-hidden bg-white flex justify-center p-4">
+                                    <img src={product.size_guide.image_url} alt={product.size_guide.name} className="max-w-full h-auto object-contain max-h-[60vh] rounded" />
+                                </div>
+                            )}
+                            {product.size_guide.content && (
+                                <div className="prose prose-invert whitespace-pre-line text-gray-300">
+                                    {product.size_guide.content}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-border flex justify-end bg-secondary/50">
+                            <button onClick={() => setIsSizeGuideOpen(false)} className="px-6 py-2 bg-primary text-black font-bold rounded-lg hover:bg-yellow-500 transition">
+                                Entendido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
