@@ -44,7 +44,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return (
         <div className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col h-full relative">
             {/* Image Container */}
-            <div className="relative h-64 overflow-hidden bg-gray-900">
+            <div className="relative h-64 overflow-hidden bg-white rounded-t-xl group-hover:bg-gray-50 transition-colors duration-300">
                 {/* Badges Overlay */}
                 <div className="absolute top-2 left-2 z-20 flex flex-col gap-1 items-start">
                     {!hasStock && (
@@ -74,7 +74,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         alt={product.name}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className={`object-cover transition-transform duration-500 group-hover:scale-105 ${!hasStock ? 'grayscale opacity-70' : ''}`}
+                        className={`object-contain p-2 transition-transform duration-500 group-hover:scale-105 ${!hasStock ? 'grayscale opacity-70' : ''}`}
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full text-gray-600 font-light">
@@ -93,7 +93,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     </h3>
                 </div>
 
-                <div className="mt-auto flex items-end justify-between gap-4">
+                <div className="mt-auto flex flex-col justify-end gap-3 pt-4">
                     <div className="flex flex-col">
                         <span className="text-xs text-gray-400 font-light">Precio</span>
                         {isDiscounted && (
@@ -101,14 +101,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                                 ${originalPrice.toLocaleString()}
                             </span>
                         )}
-                        <span className={`text-2xl font-bold tracking-tight ${isDiscounted ? 'text-green-400' : 'text-white'}`}>
+                        <span className={`text-xl sm:text-2xl font-bold tracking-tight ${isDiscounted ? 'text-green-400' : 'text-white'}`}>
                             ${Math.round(finalPrice).toLocaleString()}
                         </span>
                     </div>
 
                     <button
                         disabled={!hasStock}
-                        className={`px-4 py-2 rounded-lg font-bold transition-colors shadow-md active:scale-95 z-10 relative ${hasStock ? 'bg-primary text-black hover:bg-yellow-500' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
+                        className={`w-full py-2.5 px-2 text-sm sm:text-base font-bold text-center rounded-lg transition-colors shadow-md active:scale-95 z-10 relative ${hasStock ? 'bg-primary text-black hover:bg-yellow-500' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
                     >
                         {hasStock ? 'Ver opciones' : 'Agotado'}
                     </button>
