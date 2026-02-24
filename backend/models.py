@@ -89,8 +89,9 @@ class ProductVariant(Base):
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(String, ForeignKey("products.id"))
     sku = Column(String, unique=True, index=True)
-    size = Column(String, nullable=True)
-    color = Column(String, nullable=True)
+    size = Column(String, nullable=True) # Deprecated soon
+    color = Column(String, nullable=True) # Deprecated soon
+    attributes = Column(Text, nullable=True) # JSON dictionary of dynamic attributes
     stock = Column(Integer, default=0)
 
     product = relationship("Product", back_populates="variants")

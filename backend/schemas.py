@@ -32,12 +32,22 @@ class ProductVariantBase(BaseModel):
     sku: str
     size: Optional[str] = None
     color: Optional[str] = None
+    attributes: Optional[dict] = None
     stock: int
 
 class ProductVariant(ProductVariantBase):
     id: int
     class Config:
         from_attributes = True
+
+    @field_validator('attributes', mode='before')
+    def parse_attributes(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except:
+                return None
+        return v
 
 class ProductImageBase(BaseModel):
     url: str
@@ -113,6 +123,7 @@ class VariantUpdate(BaseModel):
     sku: str
     size: Optional[str] = None
     color: Optional[str] = None
+    attributes: Optional[dict] = None
     stock: int
 
 class ProductUpdatePayload(BaseModel):
