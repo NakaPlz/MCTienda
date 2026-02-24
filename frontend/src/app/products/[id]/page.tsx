@@ -11,8 +11,9 @@ import { useCart } from '@/context/CartContext';
 interface Variant {
     id: number;
     sku: string;
-    size: string | null;
-    color: string | null;
+    size?: string | null;  // Deprecated
+    color?: string | null; // Deprecated
+    attributes?: Record<string, string> | null;
     stock: number;
 }
 
@@ -47,21 +48,36 @@ export default function ProductDetailPage() {
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
-    const [selectedColor, setSelectedColor] = useState<string | null>(null);
-    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+
+    // Dynamic attributes state: { "Color": "Rojo", "Talle": "M" }
+    const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
+
     const [mainImage, setMainImage] = useState<string | null>(null);
     const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
     // Resolve variant when selections change
     useEffect(() => {
-        if (!product || !product.variants) return;
+        if (!product || !product.variants || product.variants.length === 0) return;
 
-        const found = product.variants.find(v =>
-            (v.color === selectedColor || (!v.color && !selectedColor)) &&
-            (v.size === selectedSize || (!v.size && !selectedSize))
-        );
+        // Find the variant that matches ALL selected attributes
+        const found = product.variants.find(v => {
+            if (!v.attributes) return false;
+
+            // Check if every selected attribute matches the variant's attributes
+            for (const [key, value] of Object.entries(selectedAttributes)) {
+                if (v.attributes[key] !== value) {
+                    return false;
+                }
+            }
+
+            // Also ensure we have selected ALL required attributes for this to be a complete match
+            // (Optional depending on business logic, but good practice to ensure exact match)
+            // For now, if all currently selected match, it's a potential match. Let's return the first one.
+            return Object.keys(selectedAttributes).length === Object.keys(v.attributes).length;
+        });
+
         setSelectedVariant(found || null);
-    }, [selectedColor, selectedSize, product]);
+    }, [selectedAttributes, product]);
 
     useEffect(() => {
         if (!id) return;
@@ -77,8 +93,15 @@ export default function ProductDetailPage() {
                         const target = available || data.variants[0];
 
                         // Sync all states so the UI reflects the default selection
-                        setSelectedColor(target.color);
-                        setSelectedSize(target.size);
+                        if (target.attributes) {
+                            setSelectedAttributes(target.attributes);
+                        } else {
+                            // Fallback for legacy items without attributes
+                            const legacyAttrs: Record<string, string> = {};
+                            if (target.color) legacyAttrs["Color"] = target.color;
+                            if (target.size) legacyAttrs["Talle"] = target.size;
+                            setSelectedAttributes(legacyAttrs);
+                        }
                         setSelectedVariant(target);
                     }
                 }
@@ -124,8 +147,11 @@ export default function ProductDetailPage() {
             quantity: 1,
             stock: variantToAdd ? variantToAdd.stock : (product.stock || 0),
             image_url: product.image_url,
-            size: variantToAdd?.size || undefined,
-            color: variantToAdd?.color || undefined
+            // For cart display, we can serialize the attributes or pass them raw
+            attributes: selectedVariant?.attributes || undefined,
+            // Fallbacks for legacy/carts
+            size: selectedVariant?.attributes?.['Talle'] || selectedVariant?.size || undefined,
+            color: selectedVariant?.attributes?.['Color'] || selectedVariant?.color || undefined
         });
 
         alert("Producto agregado al carrito!");
@@ -220,120 +246,123 @@ export default function ProductDetailPage() {
                     )}
 
                     {/* Variants Selector - Dynamic Logic */}
-                    {product.variants && product.variants.length > 0 && (
-                        <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700 space-y-6">
+                    {product.variants && product.variants.length > 0 && (() => {
+                        // 1. Extract all unique attribute keys (e.g., ['Color', 'Talle', 'Diseño de la tela'])
+                        const allKeys = new Set<string>();
+                        product.variants.forEach(v => {
+                            if (v.attributes) {
+                                Object.keys(v.attributes).forEach(k => allKeys.add(k));
+                            } else {
+                                // Fallback mapping for legacy variants
+                                if (v.color) allKeys.add("Color");
+                                if (v.size) allKeys.add("Talle");
+                            }
+                        });
 
-                            {/* Color Selector */}
-                            {Array.from(new Set(product.variants.map(v => v.color).filter(Boolean))).length > 0 && (
-                                <div>
-                                    <h3 className="text-white font-bold mb-3">Color</h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        {Array.from(new Set(product.variants.map(v => v.color).filter(Boolean))).map((color) => {
-                                            // 1. Is this color available at all for this product?
-                                            const hasAnyStock = product.variants.some(v => v.color === color && v.stock > 0);
+                        const attributeKeys = Array.from(allKeys);
 
-                                            // 2. Is it available with the CURRENT size?
-                                            const isCompatible = !selectedSize || product.variants.some(v =>
-                                                v.color === color && v.size === selectedSize && v.stock > 0
-                                            );
+                        if (attributeKeys.length === 0) return null;
 
-                                            const isSelected = selectedColor === color;
+                        return (
+                            <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700 space-y-6">
+                                {attributeKeys.map(attrKey => {
+                                    // 2. Extract all unique values for this specific attribute key
+                                    const uniqueValues = Array.from(new Set(
+                                        product.variants.map(v => {
+                                            if (v.attributes) return v.attributes[attrKey];
+                                            if (attrKey === "Color") return v.color;
+                                            if (attrKey === "Talle") return v.size;
+                                            return undefined;
+                                        }).filter(Boolean) as string[]
+                                    ));
 
-                                            return (
-                                                <button
-                                                    key={color as string}
-                                                    onClick={() => {
-                                                        if (!hasAnyStock) return;
+                                    if (uniqueValues.length === 0) return null;
 
-                                                        if (isSelected) {
-                                                            // Toggle OFF
-                                                            setSelectedColor(null);
-                                                        } else {
-                                                            // Toggle ON
-                                                            setSelectedColor(color as string);
-                                                            // If not compatible with current size, reset size
-                                                            if (!isCompatible) setSelectedSize(null);
+                                    return (
+                                        <div key={attrKey}>
+                                            <h3 className="text-white font-bold mb-3">{attrKey}</h3>
+                                            <div className="flex flex-wrap gap-3">
+                                                {uniqueValues.map(val => {
+                                                    // 1. Is this specific variation value available at all in the product?
+                                                    const hasAnyStock = product.variants.some(v => {
+                                                        const vVal = v.attributes ? v.attributes[attrKey] : (attrKey === "Color" ? v.color : (attrKey === "Talle" ? v.size : undefined));
+                                                        return vVal === val && v.stock > 0;
+                                                    });
+
+                                                    // 2. Is it compatible with the *other* currently selected attributes?
+                                                    const isCompatible = product.variants.some(v => {
+                                                        const vVal = v.attributes ? v.attributes[attrKey] : (attrKey === "Color" ? v.color : (attrKey === "Talle" ? v.size : undefined));
+                                                        if (vVal !== val || v.stock <= 0) return false;
+
+                                                        // Check against other selected attributes
+                                                        for (const [sKey, sVal] of Object.entries(selectedAttributes)) {
+                                                            if (sKey === attrKey) continue; // Skip checking against itself
+                                                            const vsVal = v.attributes ? v.attributes[sKey] : (sKey === "Color" ? v.color : (sKey === "Talle" ? v.size : undefined));
+                                                            if (vsVal !== sVal) return false;
                                                         }
-                                                    }}
-                                                    disabled={!hasAnyStock}
-                                                    className={`px-4 py-2 rounded-lg border transition-all text-sm font-bold
-                                                        ${isSelected
-                                                            ? 'bg-transparent border-yellow-500 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
-                                                            : 'bg-transparent border-gray-600 text-gray-300 hover:border-gray-400'
-                                                        }
-                                                        ${!hasAnyStock ? 'opacity-30 cursor-not-allowed decoration-slice line-through' : ''}
-                                                        ${(!isSelected && !isCompatible && hasAnyStock) ? 'opacity-60 border-dashed' : ''} 
-                                                    `}
-                                                    title={!isCompatible && hasAnyStock ? "Esta opción cambiará el talle seleccionado" : ""}
-                                                >
-                                                    {color}
-                                                </button>
-                                            );
-                                        })}
+                                                        return true;
+                                                    });
+
+                                                    const isSelected = selectedAttributes[attrKey] === val;
+
+                                                    return (
+                                                        <button
+                                                            key={val}
+                                                            onClick={() => {
+                                                                if (!hasAnyStock) return;
+
+                                                                setSelectedAttributes(prev => {
+                                                                    const next = { ...prev };
+                                                                    if (isSelected) {
+                                                                        delete next[attrKey];
+                                                                    } else {
+                                                                        next[attrKey] = val;
+                                                                    }
+
+                                                                    // If the new selection is incompatible with some OTHER selections,
+                                                                    // we should ideally reset the incompatible ones. For simplicity,
+                                                                    // if user clicks an incompatible but in-stock choice, we clear everything 
+                                                                    // else and just select this one to prevent getting stuck.
+                                                                    if (!isCompatible && !isSelected) {
+                                                                        return { [attrKey]: val };
+                                                                    }
+
+                                                                    return next;
+                                                                });
+                                                            }}
+                                                            disabled={!hasAnyStock}
+                                                            className={`px-4 py-2 rounded-lg border transition-all text-sm font-bold
+                                                                ${isSelected
+                                                                    ? 'bg-transparent border-yellow-500 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
+                                                                    : 'bg-transparent border-gray-600 text-gray-300 hover:border-gray-400'
+                                                                }
+                                                                ${!hasAnyStock ? 'opacity-30 cursor-not-allowed decoration-slice line-through' : ''}
+                                                                ${(!isSelected && !isCompatible && hasAnyStock) ? 'opacity-60 border-dashed' : ''} 
+                                                            `}
+                                                            title={!isCompatible && hasAnyStock ? "Esta opción cambiará las otras selecciones" : ""}
+                                                        >
+                                                            {val}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Stock Display */}
+                                {selectedVariant ? (
+                                    <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 font-mono text-sm">
+                                        Stock disponible: <span className="font-bold text-lg">{selectedVariant.stock}</span> unidades
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Size Selector */}
-                            {Array.from(new Set(product.variants.map(v => v.size).filter(Boolean))).length > 0 && (
-                                <div>
-                                    <h3 className="text-white font-bold mb-3">Talle</h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        {Array.from(new Set(product.variants.map(v => v.size).filter(Boolean))).map((size) => {
-                                            // 1. Is this size available at all?
-                                            const hasAnyStock = product.variants.some(v => v.size === size && v.stock > 0);
-
-                                            // 2. Is it available with CURRENT color?
-                                            const isCompatible = !selectedColor || product.variants.some(v =>
-                                                v.size === size && v.color === selectedColor && v.stock > 0
-                                            );
-
-                                            const isSelected = selectedSize === size;
-
-                                            return (
-                                                <button
-                                                    key={size as string}
-                                                    onClick={() => {
-                                                        if (!hasAnyStock) return;
-
-                                                        if (isSelected) {
-                                                            setSelectedSize(null);
-                                                        } else {
-                                                            setSelectedSize(size as string);
-                                                            if (!isCompatible) setSelectedColor(null);
-                                                        }
-                                                    }}
-                                                    disabled={!hasAnyStock}
-                                                    className={`w-12 h-12 rounded-lg border transition-all text-sm font-bold flex items-center justify-center
-                                                        ${isSelected
-                                                            ? 'bg-transparent border-yellow-500 text-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.2)]'
-                                                            : 'bg-transparent border-gray-600 text-gray-300 hover:border-gray-400'
-                                                        }
-                                                        ${!hasAnyStock ? 'opacity-30 cursor-not-allowed line-through' : ''}
-                                                        ${(!isSelected && !isCompatible && hasAnyStock) ? 'opacity-60 border-dashed' : ''}
-                                                    `}
-                                                    title={!isCompatible && hasAnyStock ? "Esta opción cambiará el color seleccionado" : ""}
-                                                >
-                                                    {size}
-                                                </button>
-                                            );
-                                        })}
+                                ) : (
+                                    <div className="text-sm text-gray-500 italic">
+                                        Selecciona variaciones para ver stock
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Stock Display */}
-                            {selectedVariant ? (
-                                <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 font-mono text-sm">
-                                    Stock disponible: <span className="font-bold text-lg">{selectedVariant.stock}</span> unidades
-                                </div>
-                            ) : (
-                                <div className="text-sm text-gray-500 italic">
-                                    Selecciona variaciones para ver stock
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                )}
+                            </div>
+                        );
+                    })()}
 
                     {/* Actions */}
                     <div className="pt-6 border-t border-gray-800 flex flex-col sm:flex-row gap-4">

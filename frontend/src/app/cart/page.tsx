@@ -64,11 +64,15 @@ export default function CartPage() {
 
                             <div className="flex-1">
                                 <h3 className="font-bold text-white text-lg">{item.name}</h3>
-                                {(item.size || item.color) && (
+                                {item.attributes ? (
+                                    <p className="text-sm text-gray-400">
+                                        {Object.entries(item.attributes).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                                    </p>
+                                ) : (item.size || item.color) ? (
                                     <p className="text-sm text-gray-400">
                                         {item.size && `Talle: ${item.size}`} {item.color && `| Color: ${item.color}`}
                                     </p>
-                                )}
+                                ) : null}
                                 <p className="text-primary font-mono">${item.price.toLocaleString()}</p>
                             </div>
 

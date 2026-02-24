@@ -13,6 +13,7 @@ export interface CartItem {
     image_url?: string;
     size?: string | null;
     color?: string | null;
+    attributes?: Record<string, string> | null;
 }
 
 interface CartContextType {

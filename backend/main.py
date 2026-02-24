@@ -76,6 +76,14 @@ def startup_event():
                      print("⚠️ Migrating DB: Adding 'size_guide_id' to products...")
                      cursor.execute("ALTER TABLE products ADD COLUMN size_guide_id INTEGER REFERENCES size_guides(id)")
                      conn.commit()
+
+                # 4.5 Product Variants Migration (attributes)
+                cursor.execute("PRAGMA table_info(product_variants)")
+                columns_variants = [info[1] for info in cursor.fetchall()]
+                if "attributes" not in columns_variants:
+                     print("⚠️ Migrating DB: Adding 'attributes' to product_variants...")
+                     cursor.execute("ALTER TABLE product_variants ADD COLUMN attributes TEXT")
+                     conn.commit()
                 
                 # 5. Labels Migration (Create Table if not exists - Fallback)
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='labels'")
@@ -245,6 +253,7 @@ def sync_products(payload: schemas.ProductSyncRequest, db: Session = Depends(get
                         db_variant.stock = v.stock
                         db_variant.size = v.size
                         db_variant.color = v.color
+                        db_variant.attributes = json.dumps(v.attributes) if v.attributes else None
                         db_variant.product_id = db_product.id
                     else:
                         db_variant = models.ProductVariant(
@@ -252,7 +261,8 @@ def sync_products(payload: schemas.ProductSyncRequest, db: Session = Depends(get
                             sku=v.sku,
                             stock=v.stock,
                             size=v.size,
-                            color=v.color
+                            color=v.color,
+                            attributes=json.dumps(v.attributes) if v.attributes else None
                         )
                         db.add(db_variant)
                     
@@ -402,6 +412,7 @@ def receive_store_product_update(payload: schemas.ProductUpdatePayload, db: Sess
             db_variant.stock = v.stock
             db_variant.size = v.size
             db_variant.color = v.color
+            db_variant.attributes = json.dumps(v.attributes) if v.attributes else None
             # Ensure it is linked to this product (fix if sku moved?)
             db_variant.product_id = db_product.id 
         else:
@@ -411,7 +422,8 @@ def receive_store_product_update(payload: schemas.ProductUpdatePayload, db: Sess
                 sku=v.sku,
                 stock=v.stock,
                 size=v.size,
-                color=v.color
+                color=v.color,
+                attributes=json.dumps(v.attributes) if v.attributes else None
             )
             db.add(db_variant)
         

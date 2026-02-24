@@ -259,6 +259,15 @@ export default function CheckoutPage() {
                                         <div>
                                             <p className="text-white font-medium text-sm line-clamp-1">{item.name}</p>
                                             <p className="text-xs text-gray-400">Cant: {item.quantity}</p>
+                                            {item.attributes ? (
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    {Object.entries(item.attributes).map(([k, v]) => `${k}: ${v}`).join(' | ')}
+                                                </p>
+                                            ) : (item.size || item.color) ? (
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    {item.size && `T: ${item.size}`} {item.color && `C: ${item.color}`}
+                                                </p>
+                                            ) : null}
                                         </div>
                                     </div>
                                     <p className="text-primary font-bold text-sm">${(item.price * item.quantity).toLocaleString()}</p>
